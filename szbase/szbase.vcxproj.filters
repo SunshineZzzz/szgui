@@ -38,6 +38,12 @@
     <Filter Include="szbase\time">
       <UniqueIdentifier>{f7ffae2e-e358-4479-9f2a-f2aa6ee9b9b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="szbase\gui\widget">
+      <UniqueIdentifier>{b1aa8468-6a71-4450-a817-84f63e1fc48f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="szbase\gui\layout">
+      <UniqueIdentifier>{675d7ae7-a716-4e2f-83a0-d2b8dcbe30d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\ANGLE\include\KHR\khrplatform.h">
@@ -373,7 +379,16 @@
     <ClInclude Include="gui\Common.h">
       <Filter>szbase\gui</Filter>
     </ClInclude>
-    <ClInclude Include="gui\Define.h">
+    <ClInclude Include="gui\widget\UIButton.h">
+      <Filter>szbase\gui\widget</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\widget\UIFrame.h">
+      <Filter>szbase\gui\widget</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\layout\AnchorLayout.h">
+      <Filter>szbase\gui\layout</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\ILayout.h">
       <Filter>szbase\gui</Filter>
     </ClInclude>
   </ItemGroup>
@@ -394,5 +409,14 @@
       <Filter>szbase\time</Filter>
     </ClCompile>
     <ClCompile Include="test.cpp" />
+    <ClCompile Include="gui\widget\UIButton.cpp">
+      <Filter>szbase\gui\widget</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\widget\UIFrame.cpp">
+      <Filter>szbase\gui\widget</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\layout\AnchorLayout.cpp">
+      <Filter>szbase\gui\layout</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

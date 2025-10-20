@@ -24,9 +24,15 @@ namespace sz_gui
 
 		// 创建窗口
 		std::tuple<const std::string, bool> CreateWindow(
-			const std::string& title, const uint32_t& width, const uint32_t& height);
+			const std::string& title, const int& width, const int& height);
 		// Run循环
 		void Run();
+		// 注册顶层UI
+		bool RegToUI(std::shared_ptr<IUIBase> ui);
+		// 注销顶层UI
+		bool UnRegTopUI(std::shared_ptr<IUIBase> ui);
+		// 设置布局
+		bool SetLayout(ILayout* pLyout);
 
 	private:
 		// SDL窗口指针
@@ -35,5 +41,8 @@ namespace sz_gui
 		std::shared_ptr<IRender> m_render = nullptr;
 		// UI管理器
 		std::shared_ptr<IUIManager> m_uiManager = nullptr;
+		// 窗口宽高
+		int m_width = 0;
+		int m_height = 0;
 	};
 }

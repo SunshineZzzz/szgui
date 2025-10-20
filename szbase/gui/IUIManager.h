@@ -2,8 +2,10 @@
 
 #include <any>
 #include <tuple>
+#include <memory>
 
 #include "IUIBase.h"
+#include "ILayout.h"
 
 namespace sz_gui 
 {
@@ -24,15 +26,25 @@ namespace sz_gui
 		IUIManager& operator=(IUIManager&&) = delete;
 
 	public:
+		// 初始化
+		virtual void Init(int, int) = 0;
 		// 注册顶层UI
 		virtual bool RegTopUI(std::shared_ptr<IUIBase>) = 0;
 		// 注销顶层UI
 		virtual bool UnRegTopUI(std::shared_ptr<IUIBase>) = 0;
 		// 注册UI
-		virtual bool RegUI(std::shared_ptr<IUIBase> ui) = 0;
+		virtual bool RegUI(std::shared_ptr<IUIBase>) = 0;
 		// 注销UI
 		virtual bool UnRegUI(std::shared_ptr<IUIBase>) = 0;
 		// 处理事件
 		virtual bool HandleEvent(const std::any&) = 0;
+		// 设置布局
+		virtual void SetLayout(ILayout*) = 0;
+		// 绘制
+		virtual void Render() = 0;
+		// 添加脏UI
+		virtual bool AddDirtyUI(std::shared_ptr<IUIBase>&) = 0;
+		// 清除所有脏矩形UI
+		virtual void ClearAllDirtyUI() = 0;
 	};
 }

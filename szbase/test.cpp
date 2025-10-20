@@ -1,9 +1,12 @@
-#include "gui/Define.h"
 #include "gui/SDLApp.h"
 
 // TEST
 #include "test/TestFramework.h"
 #include "ds/Delegate.h"
+
+#include "gui/widget/UIFrame.h"
+#include "gui/widget/UIButton.h"
+#include "gui/layout/AnchorLayout.h"
 
 namespace Test_Delegate
 {
@@ -162,7 +165,44 @@ int main(int argc, char* argv[])
 	sz_gui::SDLApp app;
 
 	app.CreateWindow("test", 800, 600);
-	app.Run();
+	
+    app.SetLayout(new sz_gui::layout::AnchorLayout());
+
+    auto frame = std::make_shared<sz_gui::widget::UIFrame>("Center",
+        sz_gui::layout::AnchorPoint::Center, 
+        sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
+        0, 0, 1.0f);
+    frame->SetLayout(new sz_gui::layout::AnchorLayout());
+    app.RegToUI(frame);
+
+    auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
+        sz_gui::layout::AnchorPoint::TopLeft, 
+        sz_gui::layout::Margins::Percentage(25.0f, 25.0f, 0.0f, 0.0f),
+        20, 10, 1.1f);
+    btn1->SetParent(frame);
+    frame->AddWidget(btn1);
+
+    auto btn2 = std::make_shared<sz_gui::widget::UIButton>("TopRight", 
+        sz_gui::layout::AnchorPoint::TopRight, 
+        sz_gui::layout::Margins::Percentage(0.0f, 0.0f, 25.0f, 25.0f),
+        20, 10, 1.1f);
+    btn2->SetParent(frame);
+    frame->AddWidget(btn2);
+
+    auto btn3 = std::make_shared<sz_gui::widget::UIButton>("Center",
+        sz_gui::layout::AnchorPoint::Center, sz_gui::layout::Margins(0.0f),
+        20, 10, 1.1f);
+    btn3->SetParent(frame);
+    frame->AddWidget(btn3);
+
+    auto btn4 = std::make_shared<sz_gui::widget::UIButton>("BottomLeft", 
+        sz_gui::layout::AnchorPoint::BottomLeft, 
+        sz_gui::layout::Margins::Percentage(25.0f, 0.0f, 0.0f, 25.0f),
+        20, 10, 1.1f);
+    btn4->SetParent(frame);
+    frame->AddWidget(btn4);
+
+    app.Run();
 
 	return 0;
 }

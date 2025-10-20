@@ -8,22 +8,9 @@ namespace sz_gui
 {
 	namespace events
 	{
-        struct WindowEventData;
-        using WindowEvent = sz_ds::Event<events::WindowEventData>;
+        // 前置声明
         struct MouseButtonEventData;
         using MouseButtonEvent = sz_ds::Event<events::MouseButtonEventData>;
-
-        // 窗口事件数据
-        struct WindowEventData
-        {
-            enum class Type
-            {
-                // 窗口关闭
-                QUIT,
-            };
-            // 窗口事件类型
-            Type m_type;
-        };
 
         // 鼠标点击事件数据
         struct MouseButtonEventData 

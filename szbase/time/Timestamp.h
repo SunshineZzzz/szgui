@@ -30,8 +30,6 @@ namespace sz_time
 		time_t SecondsSinceEpoch() const;
 		// 获取当前的时间戳
 		static Timestamp Now();
-		// 获取当前tick
-		static int64_t Ticks();
 		// 获取一个无效时间，即时间等于0
 		static Timestamp Invalid();
 		// 从unixtime来生成

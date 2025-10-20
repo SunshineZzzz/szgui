@@ -14,6 +14,17 @@ namespace sz_gui
 		m_render = nullptr;
 	}
 
+    void UIManager::Init(int width, int height)
+    {
+        m_width = width;
+        m_height = height;
+
+        m_render->SetViewPort(0, 0, width, height);
+        m_render->SetClearColor();
+        m_render->Clear();
+        m_render->SwapWindow();
+    }
+
     bool UIManager::RegTopUI(std::shared_ptr<IUIBase> topUI)
 	{
         if (!topUI)
@@ -28,8 +39,10 @@ namespace sz_gui
         
         auto id = GenUIId();
         topUI->setChildIdForUIManager(id);
+        topUI->SetUIManager(shared_from_this());
         m_topUIUnorderedmap[id] = m_topUIMultimap.insert({std::make_pair(id, topUI->GetZValue()), topUI });
-        if (RegUI(topUI)) [[unlikely]] assert(0);
+        m_layout->AddWidget(topUI);
+        if (!RegUI(topUI)) [[unlikely]] assert(0);
 
         return true;
 	}
@@ -54,8 +67,11 @@ namespace sz_gui
 
         m_topUIMultimap.erase(it);
         m_topUIUnorderedmap.erase(topUI->GetChildIdForUIManager());
+
         topUI->setChildIdForUIManager(0);
-        if (UnRegUI(topUI)) [[unlikely]] assert(0);
+        topUI->SetUIManager(std::weak_ptr<IUIManager>());
+        m_layout->DelWidget(topUI);
+        if (!UnRegUI(topUI)) [[unlikely]] assert(0);
         
         return true;
 	}
@@ -73,6 +89,11 @@ namespace sz_gui
             return false;
         }
 
+        if (m_allNameUIUnorderedmap.find(ui->GetName()) != m_allNameUIUnorderedmap.end())
+        {
+            return false;
+        }
+
         auto id = ui->GetChildIdForUIManager();
         if (id == 0)
 		{
@@ -80,7 +101,8 @@ namespace sz_gui
 			ui->setChildIdForUIManager(id);
 		}
         m_allUIUnorderedmap[id] = m_allUIMultimap.insert({ std::make_pair(id, ui->GetZValue()), ui });
-
+        m_allNameUIUnorderedmap[ui->GetName()] = id;
+        
         return true;
     }
 
@@ -95,6 +117,10 @@ namespace sz_gui
         {
             return false;
         }
+        if (m_allNameUIUnorderedmap.find(ui->GetName()) == m_allNameUIUnorderedmap.end())
+        {
+            return false;
+        }
         auto& it = m_allUIUnorderedmap[ui->GetChildIdForUIManager()];
         if (m_allUIMultimap.find(it->first) == m_allUIMultimap.end())
 		{
@@ -103,8 +129,9 @@ namespace sz_gui
 
         m_topUIMultimap.erase(it);
         m_allUIUnorderedmap.erase(ui->GetChildIdForUIManager());
+        m_allNameUIUnorderedmap.erase(ui->GetName());
         ui->setChildIdForUIManager(0);
-
+ 
         return true;
     }
 
@@ -115,17 +142,16 @@ namespace sz_gui
         {
         case SDL_EVENT_QUIT:
         {
-            // 发布窗口退出事件
-            sz_ds::PublishEvent<events::WindowEvent>(
-                events::WindowEventData::Type::QUIT
-            );
         }
         break;
         case SDL_EVENT_WINDOW_RESIZED:
-        // 窗口大小改变
-        break;
-        case SDL_EVENT_WINDOW_MOVED:
-        // 窗口移动
+        {
+            // 窗口大小改变
+            m_width = event.window.data1;
+            m_height = event.window.data2;
+            m_windowSizeChanged = true;
+            m_render->SetViewPort(0, 0, event.window.data1, event.window.data2);
+        }
         break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -145,6 +171,39 @@ namespace sz_gui
         }
         return true;
 	}
+
+    void UIManager::Render()
+    {
+        assert(m_topUIMultimap.size() == m_topUIUnorderedmap.size());
+        assert(m_allUIMultimap.size() == m_allUIUnorderedmap.size());
+        assert(m_allNameUIUnorderedmap.size() == m_allUIUnorderedmap.size());
+
+        // 如果窗口大小改变，重新渲染所有UI组件
+        if (m_windowSizeChanged)
+        {
+            m_windowSizeChanged = false;
+
+            // 重新布局
+            m_layout->SetParentRect({ 0.0f, 0.0f, (float)m_width, (float)m_height });
+            m_layout->PerformLayout();
+
+            for (auto& it : m_topUIMultimap)
+            {
+                // it.second->
+            }
+            return;
+        }
+
+        // 如果有脏矩形区域，则只渲染这些区域
+        if (!m_dirtyUIIdVec.empty())
+        {
+            // TODO: 实现脏矩形渲染逻辑
+
+            // 清除脏矩形区域列表
+            ClearAllDirtyUI();
+            return;
+        }
+    }
 
     bool UIManager::findTargetWriteChainAtPoint(float x, float y, std::vector<std::weak_ptr<IUIBase>>& chain)
     {

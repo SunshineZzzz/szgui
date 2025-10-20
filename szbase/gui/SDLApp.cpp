@@ -46,9 +46,18 @@ namespace sz_gui
     }
 
     std::tuple<const std::string, bool> SDLApp::CreateWindow(
-        const std::string& title, const uint32_t& width, const uint32_t& height)
+        const std::string& title, const int& width, const int& height)
     {
         std::string errMsg = "success";
+
+        if (width <= 0 || height <= 0)
+        {
+            errMsg = "invalid window size";
+            return { std::move(errMsg), false };
+        }
+
+        m_width = width;
+        m_height = height;
 
         m_window = SDL_CreateWindow(title.c_str(), (int)width, (int)height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
         if (!m_window)
@@ -65,6 +74,7 @@ namespace sz_gui
 		}
 
         m_uiManager = std::make_shared<UIManager>(m_render);
+        m_uiManager->Init(width, height);
 
         return { std::move(errMsg), true };
     }
@@ -87,8 +97,46 @@ namespace sz_gui
                 {
                     running = false;
                 }
+                else if (event.type == SDL_EVENT_WINDOW_RESIZED)
+				{
+					m_width = event.window.data1;
+					m_height = event.window.data2;
+				}
                 m_uiManager->HandleEvent(event);
             }
+            m_uiManager->Render();
         }
+    }
+
+    bool SDLApp::RegToUI(std::shared_ptr<IUIBase> ui)
+    {
+        if (!m_window || !m_render || !m_uiManager)
+        {
+            return false;
+        }
+
+        return m_uiManager->RegTopUI(ui);
+    }
+
+    bool SDLApp::UnRegTopUI(std::shared_ptr<IUIBase> ui)
+    {
+        if (!m_window || !m_render || !m_uiManager)
+        {
+            return false;
+        }
+
+        return m_uiManager->UnRegTopUI(ui);
+    }
+
+
+    bool SDLApp::SetLayout(ILayout* pLyout)
+    {
+        if (!m_window || !m_render || !m_uiManager)
+        {
+            return false;
+        }
+
+        m_uiManager->SetLayout(pLyout);
+        return true;
     }
 }

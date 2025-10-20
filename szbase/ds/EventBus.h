@@ -57,6 +57,10 @@ namespace sz_ds
         using EventMap = std::unordered_map<std::type_index, HandlerMap>;
 
     public:
+        // 不用全局也可以独立使用
+        EventBus() = default;
+        ~EventBus() = default;
+
         // 获取单例实例
         static EventBus& GetInstance() 
         {
@@ -129,9 +133,6 @@ namespace sz_ds
         }
 
     private:
-        EventBus() = default;
-        ~EventBus() = default;
-
         // 禁止复制/移动
         EventBus(const EventBus&) = delete;
         EventBus& operator=(const EventBus&) = delete;

@@ -13,7 +13,6 @@ namespace sz_time
 
     using std::chrono::microseconds;
     using std::chrono::system_clock;
-    using std::chrono::steady_clock;
     using std::chrono::time_point;
     using std::chrono::sys_time;
     using std::chrono::current_zone;
@@ -87,13 +86,6 @@ namespace sz_time
             system_clock::now().time_since_epoch()
         ).count();
         return Timestamp(now_us);
-    }
-
-    int64_t Timestamp::Ticks()
-    {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-            std::chrono::steady_clock::now().time_since_epoch()
-        ).count();
     }
 
     Timestamp Timestamp::Invalid()

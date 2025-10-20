@@ -229,23 +229,29 @@
     <ClInclude Include="ds\Delegate.h" />
     <ClInclude Include="ds\EventBus.h" />
     <ClInclude Include="gui\Common.h" />
-    <ClInclude Include="gui\Define.h" />
     <ClInclude Include="gui\EventTypes.h" />
     <ClInclude Include="gui\GLESContext.h" />
+    <ClInclude Include="gui\ILayout.h" />
     <ClInclude Include="gui\IRender.h" />
     <ClInclude Include="gui\IUIBase.h" />
     <ClInclude Include="gui\IUIManager.h" />
+    <ClInclude Include="gui\layout\AnchorLayout.h" />
     <ClInclude Include="gui\SDLApp.h" />
     <ClInclude Include="gui\UIBase.h" />
     <ClInclude Include="gui\UIManager.h" />
+    <ClInclude Include="gui\widget\UIButton.h" />
+    <ClInclude Include="gui\widget\UIFrame.h" />
     <ClInclude Include="test\TestFramework.h" />
     <ClInclude Include="time\Timestamp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui\GLESContext.cpp" />
+    <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />
     <ClCompile Include="gui\UIBase.cpp" />
     <ClCompile Include="gui\UIManager.cpp" />
+    <ClCompile Include="gui\widget\UIButton.cpp" />
+    <ClCompile Include="gui\widget\UIFrame.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="time\Timestamp.cpp" />
   </ItemGroup>

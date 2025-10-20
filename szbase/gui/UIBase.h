@@ -5,8 +5,10 @@
 #include <memory>
 #include <unordered_map>
 #include <map>
+#include <string>
 
 #include "IUIBase.h"
+#include "../ds/EventBus.h"
 
 namespace sz_gui 
 {
@@ -32,6 +34,8 @@ namespace sz_gui
 	public:
 		// 设置UI管理器
 		void SetUIManager(const std::weak_ptr<IUIManager>& uiManger) override;
+		// 获取UI管理器
+		const std::weak_ptr<IUIManager>& GetUIManager() const override { return m_uiManager; }
 		// 设置父组件
 		void SetParent(const std::weak_ptr<IUIBase>& parent) override;
 		// 获取父组件
@@ -54,8 +58,40 @@ namespace sz_gui
 		bool ContainsPoint(float x, float y) const override;
 		// 获取UI的ZValue
 		float GetZValue() const override { return m_z; }
+		// 获取宽高
+		float GetWidth() const override { return m_width; };
+		float GetHeight() const override { return m_height; };
+		// 获取矩形
+		const Rect GetRect() const override { return Rect{ m_x, m_y, m_width, m_height }; }
+		// 设置矩形
+		void SetRect(const Rect& rect)
+		{
+			m_x = rect.m_x;
+			m_y = rect.m_y;
+			m_width = rect.m_width;
+			m_height = rect.m_height;
+		}
+		// 获取AnchorPoint
+		layout::AnchorPoint GetAnchorPoint() const override { return m_anchorPoint; };
+		// 获取边距
+		layout::Margins GetMargins() const override  { return m_margins; };
 		// 鼠标点击事件，返回false将会阻止冒泡
-		bool OnMouseButton(const events::MouseButtonEventData&) { return false; };
+		bool OnMouseButton(const events::MouseButtonEventData&) override { return false; };
+		// 获取名称
+		const std::string& GetName() override 
+		{ 
+			if (m_fullName.empty())
+			{
+				m_fullName = m_name + std::to_string(GetChildIdForUIManager());
+			}
+			return m_fullName;
+		};
+		// 标记为脏
+		void MarkDirty() override { m_dirty = true; };
+		// 清除脏标记
+		void ClearDirty() override { m_dirty = false; };
+		// 检查是否为脏
+		bool IsDirty() const override { return m_dirty; };
 
 	protected:
 		// UI管理器
@@ -77,7 +113,17 @@ namespace sz_gui
 		float m_z = 0;		
 		float m_width = 0.0f;
 		float m_height = 0.0f;
+		// 边距
+		layout::Margins m_margins;
+		// 锚点布局类型
+		layout::AnchorPoint m_anchorPoint = layout::AnchorPoint::Center;
 		// 初始为true，首次需要渲染
 		bool m_dirty = true;
+		// 事件总线
+		sz_ds::EventBus m_eventbus;
+		// 名称
+		std::string m_name;
+		// 全名称
+		std::string m_fullName;
 	};
 }

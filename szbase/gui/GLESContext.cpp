@@ -64,12 +64,43 @@ namespace sz_gui
         return { std::move(errMsg), true };
     }
 
-    void GLESContext::SwapWindow()
+    bool GLESContext::SetViewPort(int x, int y, int width, int height)
+    {
+        if (!m_window || !m_glcontext)
+        {
+            return false;
+        }
+        glViewport(x, y, width, height);
+        return true;
+    }
+
+    bool GLESContext::SetClearColorImpl(float red, float green, float blue, float alpha)
+    {
+        if (!m_window || !m_glcontext)
+        {
+            return false;
+        }
+        glClearColor(red, green, blue, alpha);
+        return true;
+    }
+    
+    bool GLESContext::Clear()
+    {
+        if (!m_window || !m_glcontext)
+        {
+            return false;
+        }
+        // 清除颜色缓冲区(被清理为glClearColor设置的颜色)|清理深度缓冲区(被清理为1.0)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        return true;
+    }
+
+    bool GLESContext::SwapWindow()
     {
         if (!m_window || !m_glcontext)
 		{
-			return;
+			return false;
 		}
-        SDL_GL_SwapWindow(m_window);
+        return SDL_GL_SwapWindow(m_window);
     }
 }

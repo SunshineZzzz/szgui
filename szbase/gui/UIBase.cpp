@@ -4,7 +4,7 @@ namespace sz_gui
 {
 	void UIBase::SetUIManager(const std::weak_ptr<IUIManager>& uiManger)
 	{
-		assert(m_uiManager.expired());
+		assert(!uiManger.expired());
 		m_uiManager = uiManger;
 	}
 
@@ -30,9 +30,11 @@ namespace sz_gui
 				ok = parent.lock()->addChild(shared_from_this());
 				if (!ok) [[unlikely]] assert(0);
 				// 还要加入到全局
+				m_uiManager = parent.lock()->GetUIManager();
 				ok = m_uiManager.lock()->RegUI(shared_from_this());
 				if (!ok) [[unlikely]] assert(0);
 			}
+			return;
 		}
 
 		// 要设置的父亲不存在

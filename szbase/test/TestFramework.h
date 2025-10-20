@@ -8,8 +8,8 @@
 
 namespace sz_test
 {
-    // å®šä¹‰æ—¥å¿—çº§åˆ«
-    enum class LogLevel 
+    // ¶¨ÒåÈÕÖ¾¼¶±ğ
+    enum class LogLevel
     {
         OK,
         FAIL,
@@ -17,13 +17,13 @@ namespace sz_test
         SECTION
     };
 
-    // å…¨å±€æ—¥å¿—è¾“å‡ºå‡½æ•°ç±»å‹
+    // È«¾ÖÈÕÖ¾Êä³öº¯ÊıÀàĞÍ
     using LogFunction = std::function<void(LogLevel level, const std::string& message)>;
 
-    // é»˜è®¤çš„æ—¥å¿—å®ç°
-    inline void default_log_func(LogLevel level, const std::string& message) 
+    // Ä¬ÈÏµÄÈÕÖ¾ÊµÏÖ
+    inline void default_log_func(LogLevel level, const std::string& message)
     {
-        switch (level) 
+        switch (level)
         {
         case LogLevel::OK:
             std::cout << "[ OK ] " << message << std::endl;
@@ -42,24 +42,24 @@ namespace sz_test
         }
     }
 
-    // å…¨å±€æ—¥å¿—å‡½æ•°æŒ‡é’ˆï¼Œé»˜è®¤ä¸º default_log_func
+    // È«¾ÖÈÕÖ¾º¯ÊıÖ¸Õë£¬Ä¬ÈÏÎª default_log_func
     inline LogFunction g_logger = default_log_func;
 
-    // å¤–éƒ¨æ¥å£ï¼šè®¾ç½®è‡ªå®šä¹‰æ—¥å¿—å‡½æ•°
-    inline void set_logger(LogFunction logger) 
+    // Íâ²¿½Ó¿Ú£ºÉèÖÃ×Ô¶¨ÒåÈÕÖ¾º¯Êı
+    inline void set_logger(LogFunction logger)
     {
         g_logger = std::move(logger);
     }
 
-    // å†…éƒ¨è°ƒç”¨æ¥å£
-    inline void log(LogLevel level, const std::string& message) 
+    // ÄÚ²¿µ÷ÓÃ½Ó¿Ú
+    inline void log(LogLevel level, const std::string& message)
     {
         g_logger(level, message);
     }
-   
 
-    // TEST_ASSERT: æ£€æŸ¥æ¡ä»¶æ˜¯å¦ä¸ºçœŸï¼Œå¤±è´¥åˆ™è¾“å‡ºé”™è¯¯ä¿¡æ¯å¹¶é€€å‡º
-    #define TEST_ASSERT(condition, message) \
+
+    // TEST_ASSERT: ¼ì²éÌõ¼şÊÇ·ñÎªÕæ£¬Ê§°ÜÔòÊä³ö´íÎóĞÅÏ¢²¢ÍË³ö
+#define TEST_ASSERT(condition, message) \
         do { \
             if (!(condition)) { \
                 std::ostringstream oss; \
@@ -72,8 +72,8 @@ namespace sz_test
             } \
         } while (0)
 
-        // TEST_EQUAL: æ£€æŸ¥ä¸¤ä¸ªå€¼æ˜¯å¦ç›¸ç­‰ï¼Œå¤±è´¥åˆ™è¾“å‡ºé”™è¯¯ä¿¡æ¯å¹¶é€€å‡º
-    #define TEST_EQUAL(expected, actual, message) \
+        // TEST_EQUAL: ¼ì²éÁ½¸öÖµÊÇ·ñÏàµÈ£¬Ê§°ÜÔòÊä³ö´íÎóĞÅÏ¢²¢ÍË³ö
+#define TEST_EQUAL(expected, actual, message) \
         do { \
             if ((expected) != (actual)) { \
                 std::ostringstream oss; \
@@ -86,12 +86,12 @@ namespace sz_test
             } \
         } while (0)
 
-    inline void print_section(const std::string& title) 
+    inline void print_section(const std::string& title)
     {
         log(LogLevel::SECTION, title);
     }
 
-    inline void print_subsection(const std::string& title) 
+    inline void print_subsection(const std::string& title)
     {
         log(LogLevel::INFO, title);
     }
