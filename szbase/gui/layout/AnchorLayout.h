@@ -1,3 +1,5 @@
+// comment: 锚点布局
+
 #pragma once
 
 #include "../IUIBase.h"
@@ -80,7 +82,7 @@ namespace sz_gui
             // 执行布局计算
             void PerformLayout() override
             {
-                for (auto& item : m_items) 
+                for (auto& item : m_items)
                 {
                     item.calculatedRect = calculateItemRect(item);
                     item.m_widget->SetRect(item.calculatedRect);

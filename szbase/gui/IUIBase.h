@@ -3,10 +3,28 @@
 #include <cstdint>
 #include <map>
 
+#include <glm/glm.hpp>
+
 #include "IUIManager.h"
 #include "EventTypes.h"
 #include "Common.h"
 #include "ILayout.h"
+#include "../utils/BitwiseEnum.h"
+#include "../ds/Math.h"
+
+namespace sz_gui
+{
+	enum class UIFlag : uint32_t
+	{
+		// 是否是顶层
+		Top = 1 << 0,
+		// 是否可见
+		Visibale = 1 << 1,
+	};
+
+	USING_BITMASK_OPERATORS()
+}
+ENABLE_BITMASK_OPERATORS(sz_gui::UIFlag)
 
 namespace sz_gui 
 {
@@ -59,14 +77,26 @@ namespace sz_gui
 		virtual const Rect GetRect() const = 0;
 		// 设置矩形
 		virtual void SetRect(const Rect&) = 0;
+		// 获取坐标
+		virtual const glm::vec3 GetPos() const = 0;
 		// 获取AnchorPoint
 		virtual layout::AnchorPoint GetAnchorPoint() const = 0;
 		// 获取边距
 		virtual layout::Margins GetMargins() const = 0;
 		// 获取名称
 		virtual const std::string& GetName() = 0;
+		// 设置UI标记
+		virtual void SetUIFlag(UIFlag) = 0;
+		// 是否有UI标记
+		virtual bool HasUIFlag(UIFlag) const = 0;
+		// 获取当前UI和父UI的AABB2D交集
+		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
 		// 鼠标点击事件，返回false将会阻止冒泡
 		virtual bool OnMouseButton(const events::MouseButtonEventData&) = 0;
+		// 窗户大小发生改变事件
+		virtual void OnWindowSizeChange() = 0;
+		// 收集渲染数据事件
+		virtual void OnCollectRenderData() = 0;
 		// 标记为脏
 		virtual void MarkDirty() = 0;
 		// 清除脏标记

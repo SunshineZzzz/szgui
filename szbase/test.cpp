@@ -172,8 +172,10 @@ int main(int argc, char* argv[])
         sz_gui::layout::AnchorPoint::Center, 
         sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
         0, 0, 1.0f);
+    frame->SetUIFlag(sz_gui::UIFlag::Top);
     frame->SetLayout(new sz_gui::layout::AnchorLayout());
     app.RegToUI(frame);
+    app.LayoutAddWidget(frame);
 
     auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
         sz_gui::layout::AnchorPoint::TopLeft, 

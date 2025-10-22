@@ -96,4 +96,24 @@ namespace sz_gui
 		return (x >= m_x && x <= m_x + m_width &&
 			y >= m_y && y <= m_y + m_height);
 	}
+
+	sz_ds::AABB2D UIBase::getIntersectWithParent() const
+	{
+		if (m_parent.expired()) 
+		{
+			return sz_ds::AABB2D();
+		}
+
+		const sz_ds::AABB2D child_aabb(
+			m_x, m_y,
+			m_x + m_width, m_y + m_height
+		);
+		const sz_ds::AABB2D parent_aabb(
+			m_parent.lock()->GetPos().x, 
+			m_parent.lock()->GetPos().y,
+			m_parent.lock()->GetPos().x + m_parent.lock()->GetWidth(), 
+			m_parent.lock()->GetPos().y + m_parent.lock()->GetHeight()
+		);
+		return child_aabb.Intersection(parent_aabb);
+	}
 }

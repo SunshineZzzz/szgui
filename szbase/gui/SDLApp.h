@@ -33,6 +33,10 @@ namespace sz_gui
 		bool UnRegTopUI(std::shared_ptr<IUIBase> ui);
 		// 设置布局
 		bool SetLayout(ILayout* pLyout);
+		// 布局添加widget
+		bool LayoutAddWidget(std::shared_ptr<IUIBase> widget);
+		// 布局移除widget
+		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget);
 
 	private:
 		// SDL窗口指针

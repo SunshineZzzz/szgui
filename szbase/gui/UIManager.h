@@ -56,6 +56,10 @@ namespace sz_gui
 		{ 
 			m_layout.reset(layout); 
 		};
+		// 布局添加widget
+		bool LayoutAddWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->AddWidget(widget); }
+		// 布局移除widget
+		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->DelWidget(widget); }
 		// 绘制
 		void Render() override;
 		// 添加脏UI

@@ -39,9 +39,23 @@ namespace sz_gui
                 return m_layout->DelWidget(widget);
             }
 
+        public:
+            // 鼠标点击事件，返回false将会阻止冒泡
+            bool OnMouseButton(const events::MouseButtonEventData& data) override;
+            // 窗户大小发生改变事件
+            void OnWindowSizeChange() override;
+            // 收集渲染数据事件
+            void OnCollectRenderData() override;
+
         private:
             // 布局
             std::unique_ptr<ILayout> m_layout;
+            // UV左上角
+            glm::vec2 m_uvLT;
+            // UV右下角
+            glm::vec2 m_uvRB;
+            // 颜色
+            sz_ds::Rgba4Byte m_color;
         };
     }
 }

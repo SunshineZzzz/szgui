@@ -40,6 +40,10 @@ namespace sz_gui
 		virtual bool HandleEvent(const std::any&) = 0;
 		// 设置布局
 		virtual void SetLayout(ILayout*) = 0;
+		// 布局添加widget
+		virtual bool LayoutAddWidget(std::shared_ptr<IUIBase>) = 0;
+		// 布局移除widget
+		virtual bool LayoutDelWidget(std::shared_ptr<IUIBase>) = 0;
 		// 绘制
 		virtual void Render() = 0;
 		// 添加脏UI

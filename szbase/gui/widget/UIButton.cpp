@@ -20,5 +20,26 @@ namespace sz_gui
 			// m_eventbus.Publish<events::MouseButtonEvent>(data);
 			return false;
 		}
+
+		void UIButton::OnWindowSizeChange()
+		{
+			// 重新收集渲染数据
+			OnCollectRenderData();
+			return;
+		}
+
+		void UIButton::OnCollectRenderData()
+		{
+			assert(HasUIFlag(UIFlag::Top));
+
+			glm::vec3 pos = GetPos();
+			pos += m_parent.lock()->GetPos();
+
+			sz_ds::AABB2D aabb = getIntersectWithParent();
+			if (!aabb.IsNull())
+			{
+				return;
+			}
+		}
 	}
 }

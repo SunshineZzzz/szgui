@@ -63,6 +63,8 @@ namespace sz_gui
 		float GetHeight() const override { return m_height; };
 		// 获取矩形
 		const Rect GetRect() const override { return Rect{ m_x, m_y, m_width, m_height }; }
+		// 获取坐标
+		const glm::vec3 GetPos() const override { return glm::vec3{ m_x, m_y, m_z }; }
 		// 设置矩形
 		void SetRect(const Rect& rect)
 		{
@@ -77,6 +79,10 @@ namespace sz_gui
 		layout::Margins GetMargins() const override  { return m_margins; };
 		// 鼠标点击事件，返回false将会阻止冒泡
 		bool OnMouseButton(const events::MouseButtonEventData&) override { return false; };
+		// 窗户大小发生改变事件
+		void OnWindowSizeChange() override { return; };
+		// 收集渲染数据事件
+		void OnCollectRenderData() override { return; };
 		// 获取名称
 		const std::string& GetName() override 
 		{ 
@@ -86,6 +92,12 @@ namespace sz_gui
 			}
 			return m_fullName;
 		};
+		// 设置UI标记
+		void SetUIFlag(UIFlag flag) override  { m_flag |= flag; }
+		// 是否有UI标记
+		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
+		// 获取当前UI和父UI的AABB2D交集
+		sz_ds::AABB2D getIntersectWithParent() const override;
 		// 标记为脏
 		void MarkDirty() override { m_dirty = true; };
 		// 清除脏标记
@@ -125,5 +137,7 @@ namespace sz_gui
 		std::string m_name;
 		// 全名称
 		std::string m_fullName;
+		// 标记
+		UIFlag m_flag = UIFlag::Visibale;
 	};
 }

@@ -41,7 +41,6 @@ namespace sz_gui
         topUI->setChildIdForUIManager(id);
         topUI->SetUIManager(shared_from_this());
         m_topUIUnorderedmap[id] = m_topUIMultimap.insert({std::make_pair(id, topUI->GetZValue()), topUI });
-        m_layout->AddWidget(topUI);
         if (!RegUI(topUI)) [[unlikely]] assert(0);
 
         return true;
@@ -70,7 +69,6 @@ namespace sz_gui
 
         topUI->setChildIdForUIManager(0);
         topUI->SetUIManager(std::weak_ptr<IUIManager>());
-        m_layout->DelWidget(topUI);
         if (!UnRegUI(topUI)) [[unlikely]] assert(0);
         
         return true;
@@ -189,7 +187,7 @@ namespace sz_gui
 
             for (auto& it : m_topUIMultimap)
             {
-                // it.second->
+                it.second->OnWindowSizeChange();
             }
             return;
         }

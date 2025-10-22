@@ -2,6 +2,8 @@
 
 #include <string>
 #include <tuple>
+#include <vector>
+#include <cstdint>
 
 namespace sz_gui
 {
@@ -36,5 +38,8 @@ namespace sz_gui
 		virtual bool Clear() = 0;
 		// 交换缓冲区
 		virtual bool SwapWindow() = 0;
+		// 准备2D纹理
+		virtual std::tuple<std::string, bool> PrepareTexture2D(const std::vector<std::string>&, 
+			const std::vector<uint32_t>&) = 0;
 	};
 }

@@ -1,5 +1,5 @@
 #include "SDLApp.h"
-#include "GLESContext.h"
+#include "gles/GLESContext.h"
 #include "UIManager.h"
 
 namespace sz_gui
@@ -20,7 +20,7 @@ namespace sz_gui
             return { std::move(errMsg), false };
         }
 
-        auto [err, ok] = GLESContext::InitGLESAttributes();
+        auto [err, ok] = gles::GLESContext::InitGLESAttributes();
         if (!ok) 
         {
             return { std::move(errMsg), false };
@@ -66,7 +66,7 @@ namespace sz_gui
             return { std::move(errMsg), false };
         }
 
-        m_render = std::make_shared<GLESContext>(m_window);
+        m_render = std::make_shared<gles::GLESContext>(m_window);
         auto [err, ok] = m_render->Init();
         if (!ok)
 		{
@@ -139,4 +139,24 @@ namespace sz_gui
         m_uiManager->SetLayout(pLyout);
         return true;
     }
+
+    bool SDLApp::LayoutAddWidget(std::shared_ptr<IUIBase> widget)
+    {
+        if (!m_window || !m_render || !m_uiManager)
+        {
+            return false;
+        }
+
+		return m_uiManager->LayoutAddWidget(widget);
+	}
+
+	bool SDLApp::LayoutDelWidget(std::shared_ptr<IUIBase> widget)
+	{
+        if (!m_window || !m_render || !m_uiManager)
+        {
+            return false;
+        }
+        
+		return m_uiManager->LayoutDelWidget(widget);
+	}
 }
