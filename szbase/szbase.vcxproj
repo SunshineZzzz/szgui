@@ -521,6 +521,7 @@
     <ClInclude Include="gui\Common.h" />
     <ClInclude Include="gui\EventTypes.h" />
     <ClInclude Include="gui\gles\GLESContext.h" />
+    <ClInclude Include="gui\gles\Shader.h" />
     <ClInclude Include="gui\gles\Texture2D.h" />
     <ClInclude Include="gui\ILayout.h" />
     <ClInclude Include="gui\IRender.h" />
@@ -540,6 +541,7 @@
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\detail\glm.cpp" />
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\glm.cppm" />
     <ClCompile Include="gui\gles\GLESContext.cpp" />
+    <ClCompile Include="gui\gles\Shader.cpp" />
     <ClCompile Include="gui\gles\Texture2D.cpp" />
     <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />

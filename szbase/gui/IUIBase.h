@@ -28,6 +28,17 @@ ENABLE_BITMASK_OPERATORS(sz_gui::UIFlag)
 
 namespace sz_gui 
 {
+	// UI类型
+	enum class UIType
+	{
+		// 默认
+		None,
+		// 边框控件
+		Frame,
+		// 按钮控件
+		Button,
+	};
+
 	// 前置声明
 	class IUIManager;
 

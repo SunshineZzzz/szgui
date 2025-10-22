@@ -42,6 +42,15 @@ namespace sz_gui
         {
             m_window = nullptr;
 
+            // ä¿è¯ææ„é¡ºåº
+            m_shaderMap.clear();
+            m_shaderUnorderdmap.clear();
+            m_texture2dMap.clear();
+
+            m_drawCommandsVec.clear();
+            m_vertexVec.clear();
+            m_indicesVec.clear();
+
             if (m_glesContext)
             {
                 SDL_GL_DestroyContext(m_glesContext);
@@ -66,14 +75,14 @@ namespace sz_gui
                 return { std::move(errMsg), false };
             }
 
-            // ¿ªÆôÉî¶È¼ì²â
+            // å¼€å¯æ·±åº¦æ£€æµ‹
             glEnable(GL_DEPTH_TEST);
-            // Éî¶È¼ì²âµÄ±È½Ïº¯Êı, GL_LESS: µ±Ç°Æ¬ÔªÉî¶ÈÖµĞ¡ÓÚµ±Ç°Éî¶È»º³åÈ¥ÖĞÉî¶ÈÖµÊ±Í¨¹ı²âÊÔ
+            // æ·±åº¦æ£€æµ‹çš„æ¯”è¾ƒå‡½æ•°, GL_LESS: å½“å‰ç‰‡å…ƒæ·±åº¦å€¼å°äºå½“å‰æ·±åº¦ç¼“å†²å»ä¸­æ·±åº¦å€¼æ—¶é€šè¿‡æµ‹è¯•
             glDepthFunc(GL_LESS);
 
-            // ¿ªÆô»ìºÏ
+            // å¼€å¯æ··åˆ
             glEnable(GL_BLEND);
-            // ¼ÆËãÔ´ÏñËØ(Source£¬ĞÂ»æÖÆµÄ)ºÍÄ¿±êÏñËØ(Destination£¬ÑÕÉ«»º³åÇøÖĞÒÑÓĞµÄµÄÑÕÉ«»ìºÏ·½Ê½£¬
+            // è®¡ç®—æºåƒç´ (Sourceï¼Œæ–°ç»˜åˆ¶çš„)å’Œç›®æ ‡åƒç´ (Destinationï¼Œé¢œè‰²ç¼“å†²åŒºä¸­å·²æœ‰çš„çš„é¢œè‰²æ··åˆæ–¹å¼ï¼Œ
             // Final_Color = Source_Color x Source_Alpha + Destination_Color x (1 - Source_Alpha)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -106,7 +115,7 @@ namespace sz_gui
             {
                 return false;
             }
-            // Çå³ıÑÕÉ«»º³åÇø(±»ÇåÀíÎªglClearColorÉèÖÃµÄÑÕÉ«)|ÇåÀíÉî¶È»º³åÇø(±»ÇåÀíÎª1.0)
+            // æ¸…é™¤é¢œè‰²ç¼“å†²åŒº(è¢«æ¸…ç†ä¸ºglClearColorè®¾ç½®çš„é¢œè‰²)|æ¸…ç†æ·±åº¦ç¼“å†²åŒº(è¢«æ¸…ç†ä¸º1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             return true;
         }
@@ -118,6 +127,37 @@ namespace sz_gui
                 return false;
             }
             return SDL_GL_SwapWindow(m_window);
+        }
+
+        std::tuple<std::string, bool> GLESContext::PrepareShaderImpl(const char* vertexShaderSource,
+            const char* fragmentShaderSource, const char* name)
+        {
+            std::string errMsg = "success";
+
+			if (!vertexShaderSource || !fragmentShaderSource)
+			{
+				errMsg = "prepare shader args error";
+				return { std::move(errMsg), false };
+			}
+
+            if (m_shaderUnorderdmap.find(name) != m_shaderUnorderdmap.end())
+			{
+				errMsg = "prepare shader name dup";
+				return { std::move(errMsg), false };
+			}
+
+			auto t = std::make_unique<Shader>();
+            auto [err, ok] = t->LoadFromString(vertexShaderSource, fragmentShaderSource);
+			if (!ok)
+			{
+				errMsg = std::format("load shader error,{},{},{}", err, vertexShaderSource, fragmentShaderSource);
+				return { std::move(errMsg), false };
+			}
+            auto id = GenShaderId();
+            auto result = m_shaderMap.emplace(id, std::move(t));
+            m_shaderUnorderdmap[name] = result.first;
+
+			return { std::move(errMsg), true };
         }
 
         std::tuple<std::string, bool> GLESContext::PrepareTexture2D(const std::vector<std::string>& vPaths, 
@@ -153,10 +193,39 @@ namespace sz_gui
                     errMsg = std::format("load texture2d error,{},{},{},{}", err, i, vPaths[i], vUnits[i]);
 					return { std::move(errMsg), false };
 				}
-                m_texture2dMap[vUnits[i]].swap(t);
+                m_texture2dMap[vUnits[i]] = std::move(t);
             }
 
             return { std::move(errMsg), true };
+        }
+
+        void GLESContext::AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
+            const std::vector<uint32_t>& indices, DrawCommand cmd)
+        {
+            // 1. è®°å½•å½“å‰çš„å…¨å±€å¤§å°ä½œä¸ºåç§»é‡
+            const uint32_t vertexOffset = (uint32_t)m_vertexVec.size();
+            const uint32_t indexOffset = (uint32_t)m_indicesVec.size();
+
+            // 2. å°†é¡¶ç‚¹æ•°æ®è¿½åŠ åˆ°å…¨å±€é¡¶ç‚¹é›†åˆ
+            m_vertexVec.reserve(m_vertexVec.size() + vertices.size());
+            m_vertexVec.insert(m_vertexVec.end(), std::make_move_iterator(vertices.begin()), 
+                std::make_move_iterator(vertices.end()));
+
+            // 3. å°†ç´¢å¼•æ•°æ®è¿½åŠ åˆ°å…¨å±€ç´¢å¼•é›†åˆï¼Œå¹¶è¿›è¡Œç´¢å¼•åç§»ä¿®æ­£ (å…³é”®æ­¥éª¤!)
+            m_indicesVec.reserve(m_indicesVec.size() + indices.size());
+            for (uint32_t index : indices) 
+            {
+                // å°†å±€éƒ¨ç´¢å¼•å€¼ 0, 1, 2... ä¿®æ­£ä¸ºå…¨å±€ç´¢å¼•å€¼ (0+offset, 1+offset, 2+offset...)
+                m_indicesVec.push_back(index + vertexOffset);
+            }
+
+            // 4. å¡«å…… DrawCommand çš„å‡ ä½•å¼•ç”¨ä¿¡æ¯
+            cmd.m_vertexOffset = vertexOffset;
+            cmd.m_indexOffset = indexOffset;
+            cmd.m_indexCount = (uint32_t)indices.size();
+
+            // 5. å°†å®Œæ•´çš„ DrawCommand åŠ å…¥å‘½ä»¤é›†åˆ
+            m_drawCommandsVec.push_back(std::move(cmd));
         }
     }
 }

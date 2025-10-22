@@ -7,6 +7,8 @@ namespace sz_gui
 		UIButton::UIButton(std::string name, layout::AnchorPoint type, layout::Margins margins, 
 			uint32_t desiredW, uint32_t desiredH, float desiredZ)
 		{
+			m_type = UIType::Button;
+
 			m_name = std::move(name);
 			m_anchorPoint = type;
 			m_margins = std::move(margins);

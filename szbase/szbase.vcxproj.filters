@@ -1294,6 +1294,9 @@
     <ClInclude Include="..\3rd\stb\stb_image.h">
       <Filter>3rd\stb</Filter>
     </ClInclude>
+    <ClInclude Include="gui\gles\Shader.h">
+      <Filter>szbase\gui\gles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui\SDLApp.cpp">
@@ -1328,6 +1331,9 @@
       <Filter>szbase\gui\gles</Filter>
     </ClCompile>
     <ClCompile Include="gui\gles\GLESContext.cpp">
+      <Filter>szbase\gui\gles</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\gles\Shader.cpp">
       <Filter>szbase\gui\gles</Filter>
     </ClCompile>
   </ItemGroup>

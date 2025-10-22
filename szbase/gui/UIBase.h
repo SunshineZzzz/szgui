@@ -139,5 +139,7 @@ namespace sz_gui
 		std::string m_fullName;
 		// 标记
 		UIFlag m_flag = UIFlag::Visibale;
+		// UI类型
+		UIType m_type = UIType::None;
 	};
 }
