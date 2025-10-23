@@ -75,6 +75,23 @@ namespace sz_gui
             // 加入绘制数据
             void AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
                 const std::vector<uint32_t>& indices, DrawCommand cmdTemplate) override;
+            // 设置剪裁区域
+            void Scissor(int x, int y, int width, int height)
+            {
+                glScissor(x, y, width, height);
+            }
+            // 开启渲染状态
+            void EnableRenderState(RenderState state, std::any data = {});
+            // 关闭渲染状态
+            void DisableRenderState(RenderState state);
+            // 开始使用Shader
+            void BeginUseShader(uint32_t shaderId);
+            // 结束使用Shader
+            void EndUserShader();
+            // 绑定2D纹理
+            void BeginUseTexture2D(uint32_t texture2dId);
+
+
         private:
             // SDL窗口指针
             SDL_Window* m_window = nullptr;
@@ -95,6 +112,12 @@ namespace sz_gui
             std::vector<sz_ds::Vertex> m_vertexVec;
             // 绘制索引集合
             std::vector<uint32_t> m_indicesVec;
+            // 当前渲染状态
+            RenderState m_curRenderState = RenderState::None;
+            // 当前使用的ShaderId
+            uint32_t m_curShaderId = 0;
+            // 当前使用的2d纹理单元Id
+            uint32_t m_curTexture2dId = 0;
         };
     }
 }

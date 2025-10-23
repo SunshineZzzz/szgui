@@ -27,11 +27,11 @@ namespace sz_gui
 
 		void UIFrame::OnWindowSizeChange()
 		{
-			// ÖØĞÂ²¼¾Ö
+			// é‡æ–°å¸ƒå±€
 			m_layout->SetParentRect(GetRect());
 			m_layout->PerformLayout();
 
-			// ÖØĞÂÊÕ¼¯äÖÈ¾Êı¾İ
+			// é‡æ–°æ”¶é›†æ¸²æŸ“æ•°æ®
 			OnCollectRenderData();
 			return;
 		}
@@ -52,43 +52,55 @@ namespace sz_gui
 				}
 			}
 
-			// Éú³ÉäÖÈ¾Êı¾İ
-			sz_ds::Vertex vertex[] =
+			// ç”Ÿæˆæ¸²æŸ“æ•°æ®
+			std::vector<sz_ds::Vertex> vertexVec =
 			{
 				{
-					// ×óÉÏ½Ç
+					// å·¦ä¸Šè§’
 					{m_x, m_y, m_z},
-					// ÌùÍ¼ÇøÓòµÄ×óÉÏ½Ç
+					// è´´å›¾åŒºåŸŸçš„å·¦ä¸Šè§’
 					{m_uvLT.x, m_uvLT.y, 0.0f},
 					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
 				},
 				{
-					// ÓÒÉÏ½Ç
+					// å³ä¸Šè§’
 					{m_x + m_width, m_y, m_z},
-					// ÌùÍ¼ÇøÓòµÄÓÒÉÏ½Ç
+					// è´´å›¾åŒºåŸŸçš„å³ä¸Šè§’
 					{m_uvRB.x, m_uvLT.y, 0.0f},
 					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
 				},
 				{
-					// ÓÒÏÂ½Ç
+					// å³ä¸‹è§’
 					{m_x + m_width, m_y + m_height, m_z},
-					// ÌùÍ¼ÇøÓòµÄÓÒÏÂ½Ç
-					{m_uvLT.x,m_uvRB.y, 0.0f},
+					// è´´å›¾åŒºåŸŸçš„å³ä¸‹è§’
+					{m_uvRB.x, m_uvRB.y, 0.0f},
 					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
 				},
 				{
-					// ×óÏÂ½Ç
+					// å·¦ä¸‹è§’
 					{m_x, m_y + m_height, m_z},
-					// ÌùÍ¼ÇøÓòµÄ×óÏÂ½Ç
+					// è´´å›¾åŒºåŸŸçš„å·¦ä¸‹è§’
 					{m_uvLT.x, m_uvRB.y, 0.0f},
 					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
 				},
 			};
 
-			// ¶¥µãÊı¾İË÷Òı
-			unsigned int indices[] = { 0, 1, 3, 4 };
+			// é¡¶ç‚¹æ•°æ®ç´¢å¼•
+			std::vector<uint32_t> indicesVec = { 0, 1, 3, 4 };
 
+			// ç»˜åˆ¶å‘½ä»¤
+			DrawCommand dCmd
+			{
+				m_type,
+				DrawMode::LINE_LOOP,
+				RenderState::EnableScissorTest | RenderState::EnableDepthTest,
+				indicesVec.size(),
+				{m_x+1, m_y+1, m_width-2, m_height-2},
+				m_texture2dUintId,
+				m_shaderId,
+			};
 
+			m_uiManager.lock()->AppendDrawData(vertexVec, indicesVec, dCmd);
 		}
 	}
 }

@@ -135,8 +135,13 @@ namespace sz_gui
 
 	bool UIManager::HandleEvent(const std::any& eventContainer)
 	{
-		const SDL_Event& event = std::any_cast<const SDL_Event&>(eventContainer);
-        switch (event.type)
+		const SDL_Event* event = std::any_cast<const SDL_Event>(&eventContainer);
+        if (!event)
+		{
+			return false;
+		}
+
+        switch (event->type)
         {
         case SDL_EVENT_QUIT:
         {
@@ -145,23 +150,23 @@ namespace sz_gui
         case SDL_EVENT_WINDOW_RESIZED:
         {
             // 窗口大小改变
-            m_width = event.window.data1;
-            m_height = event.window.data2;
+            m_width = event->window.data1;
+            m_height = event->window.data2;
             m_windowSizeChanged = true;
-            m_render->SetViewPort(0, 0, event.window.data1, event.window.data2);
+            m_render->SetViewPort(0, 0, event->window.data1, event->window.data2);
         }
         break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
         {
-            if (event.button.button != SDL_BUTTON_LEFT && 
-                event.button.button != SDL_BUTTON_RIGHT &&
-                event.button.button != SDL_BUTTON_MIDDLE)
+            if (event->button.button != SDL_BUTTON_LEFT && 
+                event->button.button != SDL_BUTTON_RIGHT &&
+                event->button.button != SDL_BUTTON_MIDDLE)
             {
                 return false;
             }
             // 鼠标点击事件
-            bubbleEvent(event);
+            bubbleEvent(*event);
         }
         break;
         default:
@@ -189,6 +194,7 @@ namespace sz_gui
             {
                 it.second->OnWindowSizeChange();
             }
+            
             return;
         }
 

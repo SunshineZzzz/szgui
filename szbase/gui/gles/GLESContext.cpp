@@ -76,15 +76,9 @@ namespace sz_gui
             }
 
             // 开启深度检测
-            glEnable(GL_DEPTH_TEST);
-            // 深度检测的比较函数, GL_LESS: 当前片元深度值小于当前深度缓冲去中深度值时通过测试
-            glDepthFunc(GL_LESS);
-
+            EnableRenderState(RenderState::EnableDepthTest);
             // 开启混合
-            glEnable(GL_BLEND);
-            // 计算源像素(Source，新绘制的)和目标像素(Destination，颜色缓冲区中已有的的颜色混合方式，
-            // Final_Color = Source_Color x Source_Alpha + Destination_Color x (1 - Source_Alpha)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            EnableRenderState(RenderState::EnableBlend);
 
             return { std::move(errMsg), true };
         }
@@ -226,6 +220,114 @@ namespace sz_gui
 
             // 5. 将完整的 DrawCommand 加入命令集合
             m_drawCommandsVec.push_back(std::move(cmd));
+        }
+
+        void GLESContext::EnableRenderState(RenderState state, std::any data)
+        {
+            switch (state)
+            {
+            case RenderState::EnableScissorTest:
+            {
+                glEnable(GL_SCISSOR_TEST);
+                if (const Rect* rectPtr = std::any_cast<const Rect>(&data))
+                {
+                    // 设置裁剪区域
+					Scissor(rectPtr->m_x, rectPtr->m_y, rectPtr->m_width, rectPtr->m_height);
+                }
+            }
+			break;
+            case RenderState::EnableDepthTest:
+            {
+                // 开启深度检测
+                glEnable(GL_DEPTH_TEST);
+                // 深度检测的比较函数, GL_LESS: 当前片元深度值小于当前深度缓冲区中深度值时通过测试
+                glDepthFunc(GL_GREATER);
+            }
+            break;
+            case RenderState::EnableBlend:
+			{
+                // 开启混合
+                glEnable(GL_BLEND);
+                // 计算源像素(Source，新绘制的)和目标像素(Destination，颜色缓冲区中已有的的颜色混合方式，
+                // Final_Color = Source_Color x Source_Alpha + Destination_Color x (1 - Source_Alpha)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+			default:
+                return;
+			}
+
+            m_curRenderState = m_curRenderState | state;
+        }
+
+        void GLESContext::DisableRenderState(RenderState state)
+        {
+            switch (state)
+            {
+            case RenderState::EnableScissorTest:
+            {
+                glDisable(GL_SCISSOR_TEST);
+            }
+            break;
+            case RenderState::EnableDepthTest:
+            {
+                glDisable(GL_DEPTH_TEST);
+            } 
+            break;
+            case RenderState::EnableBlend:
+            {
+                glDisable(GL_BLEND);
+            }
+			break;
+			default:
+                return;
+			}
+
+            m_curRenderState = m_curRenderState & ~state;
+        }
+
+        void GLESContext::BeginUseShader(uint32_t shaderId)
+        {
+            if (shaderId == 0)
+			{
+				return;
+			}
+
+            if (m_curShaderId == shaderId)
+			{
+				return;
+			}
+
+			EndUserShader();
+			
+			m_curShaderId = shaderId;
+			m_shaderMap[shaderId]->Begin();
+        }
+
+        void GLESContext::EndUserShader()
+        {
+            if (m_curShaderId == 0)
+			{
+				return;
+			}
+
+            m_shaderMap[m_curShaderId]->End();
+            m_curShaderId = 0;
+        }
+        
+        void GLESContext::BeginUseTexture2D(uint32_t texture2dId)
+        {
+            if (texture2dId == 0)
+            {
+                return;
+            }
+
+            if (m_curTexture2dId == texture2dId)
+			{
+				return;
+			}
+
+			m_curTexture2dId = texture2dId;
+			m_texture2dMap[texture2dId]->Bind();
         }
     }
 }

@@ -14,10 +14,14 @@ namespace sz_gui
 	// 绘制状态
 	enum class RenderState : uint32_t
 	{
-		// 开启混合
-		EnableBlend = 1 << 0,
+		// 默认
+		None = 1 << 0,
 		// 开启剪裁测试
 		EnableScissorTest = 1 << 1,
+		// 开启深度测试
+		EnableDepthTest = 1 << 2,
+		// 开启混合
+		EnableBlend = 1 << 3,
 	};
 
 	USING_BITMASK_OPERATORS()
@@ -29,6 +33,8 @@ namespace sz_gui
 	// 绘制模式
 	enum class DrawMode
 	{
+		// 默认
+		None,
 		// 连续绘制线段，并自动连接首尾
 		LINE_LOOP,
 	};
@@ -37,23 +43,23 @@ namespace sz_gui
 	struct DrawCommand 
 	{
 		// UI类型
-		UIType m_type;
+		UIType m_type = UIType::None;
 		// 绘制模式
-		DrawMode m_drawMode;
+		DrawMode m_drawMode = DrawMode::None;
 		// 绘制状态
-		RenderState m_renderState;
-		// 裁剪区域
-		Rect scissor;
-		// 要使用的纹理ID
-		uint32_t m_textureId;
-		// 着色器Id
-		uint32_t m_shaderId;
-		// 顶点数据偏移
-		uint32_t m_vertexOffset;
-		// 顶点数据索引偏移
-		uint32_t m_indexOffset;
+		RenderState m_renderState = RenderState::None;
 		// 顶点数据索引数量
-		uint32_t m_indexCount;
+		uint32_t m_indexCount = 0;
+		// 裁剪区域
+		Rect scissor{};
+		// 要使用的纹理ID
+		uint32_t m_textureId = 0;
+		// 着色器Id
+		uint32_t m_shaderId = 0;
+		// 顶点数据偏移
+		uint32_t m_vertexOffset = 0;
+		// 顶点数据索引偏移
+		uint32_t m_indexOffset = 0;
 	};
 
 	// 渲染接口

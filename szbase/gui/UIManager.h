@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 
+#include <vector>
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -62,6 +63,12 @@ namespace sz_gui
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->DelWidget(widget); }
 		// 绘制
 		void Render() override;
+		// 加入绘制数据
+		void AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
+			const std::vector<uint32_t>& indices, DrawCommand cmdTemplate) override
+		{
+			m_render->AppendDrawData(vertices, indices, cmdTemplate);
+		}
 		// 添加脏UI
 		bool AddDirtyUI(std::shared_ptr<IUIBase>& ui) override
 		{

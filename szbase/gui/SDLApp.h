@@ -37,6 +37,8 @@ namespace sz_gui
 		bool LayoutAddWidget(std::shared_ptr<IUIBase> widget);
 		// 布局移除widget
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget);
+		// 根据shader名称获取shaderId
+		uint32_t GetShaderIdByName(const std::string& name = "default") const;
 
 	private:
 		// SDL窗口指针

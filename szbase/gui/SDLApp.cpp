@@ -159,4 +159,14 @@ namespace sz_gui
         
 		return m_uiManager->LayoutDelWidget(widget);
 	}
+
+    uint32_t SDLApp::GetShaderIdByName(const std::string& name) const
+    {
+        if (!m_window || !m_render || !m_uiManager)
+		{
+			return 0;
+		}
+
+		return m_render->GetShaderIdByName(name);
+    }
 }

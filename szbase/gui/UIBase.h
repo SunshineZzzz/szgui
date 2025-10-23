@@ -8,6 +8,7 @@
 #include <string>
 
 #include "IUIBase.h"
+#include "IRender.h"
 #include "../ds/EventBus.h"
 
 namespace sz_gui 
@@ -96,6 +97,10 @@ namespace sz_gui
 		void SetUIFlag(UIFlag flag) override  { m_flag |= flag; }
 		// 是否有UI标记
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
+		// 设置2d纹理单元Id
+		virtual void SetTexture2dUnitId(uint32_t id) override { m_texture2dUintId = id; }
+		// 设置shaderId
+		virtual void SetShaderId(uint32_t id) override { m_shaderId = id; };
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;
 		// 标记为脏
@@ -141,5 +146,9 @@ namespace sz_gui
 		UIFlag m_flag = UIFlag::Visibale;
 		// UI类型
 		UIType m_type = UIType::None;
+		// 2d纹理单元Id
+		uint32_t m_texture2dUintId = 0;
+		// shaderId
+		uint32_t m_shaderId = 0;
 	};
 }

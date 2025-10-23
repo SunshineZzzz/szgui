@@ -100,6 +100,10 @@ namespace sz_gui
 		virtual void SetUIFlag(UIFlag) = 0;
 		// 是否有UI标记
 		virtual bool HasUIFlag(UIFlag) const = 0;
+		// 设置2d纹理单元Id
+		virtual void SetTexture2dUnitId(uint32_t) = 0;
+		// 设置shaderId
+		virtual void SetShaderId(uint32_t) = 0;
 		// 获取当前UI和父UI的AABB2D交集
 		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
 		// 鼠标点击事件，返回false将会阻止冒泡
