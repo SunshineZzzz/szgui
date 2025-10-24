@@ -8,9 +8,9 @@ namespace sz_gui
 {
 	namespace layout 
 	{
-        Rect AnchorLayout::calculateItemRect(const AnchorLayoutItem& item) const
+        sz_ds::Rect AnchorLayout::calculateItemRect(const AnchorLayoutItem& item) const
         {
-            Rect result{};
+            sz_ds::Rect result{};
 
             const Margins pixelMargins = calculateActualMargins(item.margins, m_parentRect.m_width, 
                 m_parentRect.m_height);
@@ -22,7 +22,7 @@ namespace sz_gui
                 m_parentRect.m_height - pixelMargins.m_top - pixelMargins.m_bottom);
 
             // 获取控件的期望尺寸
-            Rect desiredSize = item.m_widget->GetRect();
+            sz_ds::Rect desiredSize = item.m_widget->GetRect();
 
             // 在单点锚定模式下，控件的尺寸是期望尺寸与可用空间中的较小值
             result.m_width = availableWidth;

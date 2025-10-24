@@ -85,9 +85,9 @@ namespace sz_gui
 		virtual float GetWidth() const = 0;
 		virtual float GetHeight() const = 0;
 		// 获取矩形
-		virtual const Rect GetRect() const = 0;
+		virtual const sz_ds::Rect GetRect() const = 0;
 		// 设置矩形
-		virtual void SetRect(const Rect&) = 0;
+		virtual void SetRect(const sz_ds::Rect&) = 0;
 		// 获取坐标
 		virtual const glm::vec3 GetPos() const = 0;
 		// 获取AnchorPoint

@@ -3,7 +3,9 @@
 #pragma once
 
 #include <SDL3/SDL.h>
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <tuple>
 #include <string>
@@ -11,11 +13,13 @@
 #include <unordered_map>
 #include <vector>
 #include <memory>
+#include <stack>
 
 #include "../IRender.h"
 #include "Texture2D.h"
 #include "Shader.h"
 #include "../../ds/Math.h"
+#include "OrthographicCamera.h"
 
 namespace sz_gui 
 {
@@ -48,14 +52,6 @@ namespace sz_gui
 
             // 初始化
             std::tuple<std::string, bool> Init() override;
-            // 设置视口
-            bool SetViewPort(int, int, int, int) override;
-            // 设置清除颜色
-            bool SetClearColorImpl(float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f) override;
-            // 清除屏幕
-            bool Clear() override;
-            // 交换缓冲区
-            bool SwapWindow() override;
             // 准备Shader
             std::tuple<std::string, bool> PrepareShaderImpl(const char* vertexShaderSource,
                 const char* fragmentShaderSource, const char* name) override;
@@ -75,11 +71,24 @@ namespace sz_gui
             // 加入绘制数据
             void AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
                 const std::vector<uint32_t>& indices, DrawCommand cmdTemplate) override;
-            // 设置剪裁区域
-            void Scissor(int x, int y, int width, int height)
-            {
-                glScissor(x, y, width, height);
-            }
+            // 压入剪裁区域
+            void PushScissor(const sz_ds::Rect& rect) override;
+            // 弹出剪裁区域
+            void PopScissor() override;
+            // 全量绘制
+            void FullDraw() override;
+            // 增量绘制
+            void IncDraw() override;
+
+        public:
+            // 设置视口
+            void SetViewPort(int, int, int, int);
+            // 设置清除颜色
+            void SetClearColor(float red = 1.0f, float green = 1.0f, float blue = 1.0f, float alpha = 1.0f);
+            // 清除屏幕
+            void Clear();
+            // 交换缓冲区
+            bool SwapWindow();
             // 开启渲染状态
             void EnableRenderState(RenderState state, std::any data = {});
             // 关闭渲染状态
@@ -90,7 +99,37 @@ namespace sz_gui
             void EndUserShader();
             // 绑定2D纹理
             void BeginUseTexture2D(uint32_t texture2dId);
-
+            // 获取窗口大小
+            std::pair<const int, const int> GetWindowSize() const 
+            {
+                int width = 0;
+                int height = 0;
+                SDL_GetWindowSize(m_window, &width, &height);
+                return std::make_pair(width, height);
+            }
+            // 获取当前视口和裁剪区域交集
+            sz_ds::AABB2D GetViewportAndScissorRectIntersection(const sz_ds::Rect& rect) const
+            {
+				auto [width, height] = GetWindowSize();
+				sz_ds::AABB2D viewportRect = sz_ds::AABB2D(0.0f, 0.0f, (float)width, (float)height);
+                return viewportRect.Intersection(rect.ToAABB2D());
+            }
+            // 设置线宽
+            void SetLineWidth(float width)
+            {
+                if (width != m_curLineWidth)
+                {
+                    glLineWidth(width);
+                    m_curLineWidth = width;
+                }
+            }
+            // 准备摄像机
+            void PrepareCamera(int width, int height)
+            {
+                m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), float(height), 0.0f, 1000.0f, -1000.0f);
+                m_viewMatrix = m_camera->GetViewMatrix();
+                m_projectionMatrix = m_camera->GetProjectionMatrix();
+            }
 
         private:
             // SDL窗口指针
@@ -118,6 +157,20 @@ namespace sz_gui
             uint32_t m_curShaderId = 0;
             // 当前使用的2d纹理单元Id
             uint32_t m_curTexture2dId = 0;
+            // 当前线宽
+            float m_curLineWidth = 1.0f;
+            // 当前裁剪区域
+            sz_ds::Rect m_curScissorRect = sz_ds::Rect();
+            // 用于保存嵌套的裁剪区域
+            std::stack<sz_ds::Rect> m_scissorStack;
+            // 模型变化矩阵
+            glm::mat4 m_modelMatrix = glm::identity<glm::mat4>();
+            // 摄像机，视图变化矩阵
+            glm::mat4 m_viewMatrix = glm::identity<glm::mat4>();
+            // 投影变化矩阵
+            glm::mat4 m_projectionMatrix = glm::identity<glm::mat4>();
+            // 摄像机
+            std::unique_ptr<Camera> m_camera = nullptr;
         };
     }
 }

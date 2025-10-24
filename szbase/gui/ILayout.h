@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include "../ds/Math.h"
 
 namespace sz_gui 
 {
@@ -100,7 +100,7 @@ namespace sz_gui
 		ILayout& operator=(ILayout&&) = delete;
 
 		// 设置父容器边界
-		virtual void SetParentRect(const Rect&) = 0;
+		virtual void SetParentRect(const sz_ds::Rect&) = 0;
 		// 添加需要布局的控件
 		virtual bool AddWidget(std::shared_ptr<IUIBase> widget) = 0;
         // 删除布局控件

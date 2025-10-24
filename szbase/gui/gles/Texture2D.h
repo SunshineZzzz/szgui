@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 
 namespace sz_gui
 {

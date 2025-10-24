@@ -10,6 +10,10 @@ namespace sz_ds
 {
     // 常用类型别名
     template<typename T>
+    class RectData;
+    using Rect = RectData<float>;
+    using Rectd = RectData<double>;
+    template<typename T>
     class AxisAlignedBox2D;
     using AABB2D = AxisAlignedBox2D<float>;
     using AABB2Dd = AxisAlignedBox2D<double>;
@@ -17,6 +21,60 @@ namespace sz_ds
     class VertexData;
     using Vertex = VertexData<float>;
     using Vertexd = VertexData<double>;
+    
+    // 容差比较函数示例
+    template<typename T>
+    bool float_equal(T a, T b, T epsilon = T(0.0001))
+    {
+        return std::fabs(a - b) < epsilon;
+    }
+
+    // 矩形结构体
+    template<typename T>
+    class RectData
+    {
+    public:
+        T m_x, m_y;
+        T m_width, m_height;
+
+        RectData() : m_x(T(0)), m_y(T(0)), m_width(T(0)), m_height(T(0)) {}
+        RectData(T x, T y, T width, T height) : m_x(x), m_y(y), m_width(width), m_height(height) {}
+
+        bool operator==(const RectData<T>& other) const
+        {
+            return (float_equal(m_x, other.m_x) &&
+                float_equal(m_y, other.m_y) &&
+                float_equal(m_width, other.m_width) &&
+                float_equal(m_height, other.m_height));
+        }
+
+        bool operator!=(const RectData<T>& other) const
+        {
+            return !(*this == other);
+        }
+
+        AxisAlignedBox2D<T> ToAABB2D() const
+        {
+            return AxisAlignedBox2D<T>(m_x, m_y, m_x + m_width, m_y + m_height);
+        }
+
+        // 从矩形四周减去指定的边框厚度(向内收缩)
+        RectData<T> SubtractBorder(T border) const
+        {
+            T new_width = m_width - (border * 2);
+            T new_height = m_height - (border * 2);
+
+            // 确保宽度和高度不小于零
+            if (new_width < T(0)) new_width = T(0);
+            if (new_height < T(0)) new_height = T(0);
+
+            // 新的左上角位置（向右下移动）
+            T new_x = m_x + border;
+            T new_y = m_y + border;
+
+            return RectData<T>(new_x, new_y, new_width, new_height);
+        }
+    };
 
     // 4字节颜色
     struct Rgba4Byte
@@ -158,6 +216,11 @@ namespace sz_ds
         const Vec2& GetMaximum() const
         {
             return m_maximum;
+        }
+        // 获取矩形
+        const RectData<T> GetRect() const
+        {
+            return RectData<T>(m_minimum.x, m_minimum.y, m_maximum.x - m_minimum.x, m_maximum.y - m_minimum.y);
         }
         // 设置最大角点
         void SetMaximum(const Vec2& vec)

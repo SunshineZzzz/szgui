@@ -46,6 +46,8 @@ namespace sz_gui
             void OnWindowSizeChange() override;
             // 收集渲染数据事件
             void OnCollectRenderData() override;
+            // 设置边框宽度
+            void SetBorderWidth(float width) { m_borderWidth = width; }
 
         private:
             // 布局
@@ -56,6 +58,8 @@ namespace sz_gui
             glm::vec2 m_uvRB;
             // 颜色
             sz_ds::Rgba4Byte m_color;
+            // 边框宽度
+            float m_borderWidth = 1.0f;
         };
     }
 }

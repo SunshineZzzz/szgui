@@ -12,7 +12,7 @@ namespace sz_gui
             std::string errMsg = "success";
 
             if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES) ||
-                !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2) ||
+                !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) ||
                 !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0))
             {
                 errMsg = "gles version error," + std::string(SDL_GetError());
@@ -75,52 +75,64 @@ namespace sz_gui
                 return { std::move(errMsg), false };
             }
 
+            const char* vs =
+            {
+                "#version 300 es\n"
+                "layout(location = 0) in vec3 aPos;\n"
+                "layout(location = 1) in vec4 aColor;\n"
+                "layout(location = 2) in vec2 aUV;\n"
+                "out vec4 color;\n"
+                "out vec2 uv;\n"
+                "uniform mat4 modelMatrix;\n"
+                "uniform mat4 viewMatrix;\n"
+                "uniform mat4 projectionMatrix;\n"
+                "void main()\n"
+                "{\n"
+                "   vec4 position = vec4(aPos, 1.0);\n"
+                "   position = projectionMatrix * viewMatrix * modelMatrix * position;\n"
+                "   gl_Position = position;\n"
+                "   color = aColor;\n"
+                "   uv = aUV;\n"
+                "}\n"
+            };
+            const char* ps =
+            {
+                "#version 300 es\n"
+                "out vec4 FragColor;\n"
+                "in vec4 color;\n"
+                "in vec2 uv;\n"
+                "uniform sampler2D sampler;\n"
+                "uniform bool useColor;\n"
+                "uniform bool isText;\n"
+                "void main()\n"
+                "{\n"
+                "   if (useColor)"
+                "   {\n"
+                "        FragColor = color;\n"
+                "        return;\n"
+                "   }\n"
+                "	vec4 texColor = texture(sampler, uv);\n"
+                "   if (!isText)\n"
+                "   {\n"
+                "	    FragColor = texColor;\n"
+                "       return;\n"
+                "   }\n"
+                "	FragColor = vec4(color.rgb * texColor.a, color.a * texColor.a);\n"
+                "}\n"
+            };
+            auto [err, ok] = PrepareShader(vs, ps);
+            if (!ok)
+			{
+				errMsg = std::format("prepare shader error,{}", err);
+				return { std::move(errMsg), false };
+			}
+            
             // 开启深度检测
             EnableRenderState(RenderState::EnableDepthTest);
             // 开启混合
             EnableRenderState(RenderState::EnableBlend);
 
             return { std::move(errMsg), true };
-        }
-
-        bool GLESContext::SetViewPort(int x, int y, int width, int height)
-        {
-            if (!m_window || !m_glesContext)
-            {
-                return false;
-            }
-            glViewport(x, y, width, height);
-            return true;
-        }
-
-        bool GLESContext::SetClearColorImpl(float red, float green, float blue, float alpha)
-        {
-            if (!m_window || !m_glesContext)
-            {
-                return false;
-            }
-            glClearColor(red, green, blue, alpha);
-            return true;
-        }
-
-        bool GLESContext::Clear()
-        {
-            if (!m_window || !m_glesContext)
-            {
-                return false;
-            }
-            // 清除颜色缓冲区(被清理为glClearColor设置的颜色)|清理深度缓冲区(被清理为1.0)
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            return true;
-        }
-
-        bool GLESContext::SwapWindow()
-        {
-            if (!m_window || !m_glesContext)
-            {
-                return false;
-            }
-            return SDL_GL_SwapWindow(m_window);
         }
 
         std::tuple<std::string, bool> GLESContext::PrepareShaderImpl(const char* vertexShaderSource,
@@ -222,22 +234,111 @@ namespace sz_gui
             m_drawCommandsVec.push_back(std::move(cmd));
         }
 
+        void GLESContext::PushScissor(const sz_ds::Rect& rect)
+        {
+            sz_ds::AABB2D intersection;
+
+            if (m_scissorStack.empty())
+            {
+                intersection = GetViewportAndScissorRectIntersection(rect);
+            }
+            else
+            {
+                sz_ds::Rect parentRect = m_scissorStack.top();
+                intersection = parentRect.ToAABB2D().Intersection(rect.ToAABB2D());
+            }
+
+            auto newScissorRect = intersection.GetRect();
+            m_scissorStack.push(newScissorRect);
+            EnableRenderState(RenderState::EnableScissorTest, newScissorRect);
+        }
+
+        void GLESContext::PopScissor()
+        {
+            assert(m_scissorStack.size() != 0);
+
+            m_scissorStack.pop();
+
+            if (m_scissorStack.empty())
+            {
+                DisableRenderState(RenderState::EnableScissorTest);
+                return;
+            }
+
+            const auto& parentRect = m_scissorStack.top();
+            EnableRenderState(RenderState::EnableScissorTest, parentRect);
+        }
+
+        void GLESContext::FullDraw()
+        {
+            const auto [width, height] = GetWindowSize();
+            // 清理
+            Clear();
+            // 设置视口
+            SetViewPort(0, 0, width, height);
+            // 准备摄像机    
+            PrepareCamera(GetWindowSize().first, GetWindowSize().second);
+
+
+        }
+
+        void GLESContext::IncDraw()
+        {
+
+        }
+
+        void GLESContext::SetViewPort(int x, int y, int width, int height)
+        {
+            glViewport(x, y, width, height);
+        }
+
+        void GLESContext::SetClearColor(float red, float green, float blue, float alpha)
+        {
+            glClearColor(red, green, blue, alpha);
+        }
+
+        void GLESContext::Clear()
+        {
+            // 清除颜色缓冲区(被清理为glClearColor设置的颜色)|清理深度缓冲区(被清理为1.0)
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+
+        bool GLESContext::SwapWindow()
+        {
+            return SDL_GL_SwapWindow(m_window);
+        }
+
         void GLESContext::EnableRenderState(RenderState state, std::any data)
         {
             switch (state)
             {
             case RenderState::EnableScissorTest:
             {
-                glEnable(GL_SCISSOR_TEST);
-                if (const Rect* rectPtr = std::any_cast<const Rect>(&data))
+                const sz_ds::Rect* rectPtr = std::any_cast<sz_ds::Rect>(&data);
+                if (!rectPtr)
                 {
-                    // 设置裁剪区域
-					Scissor(rectPtr->m_x, rectPtr->m_y, rectPtr->m_width, rectPtr->m_height);
+                    assert(0);
+                    return;
                 }
+
+                if (HasFlag(m_curRenderState, RenderState::EnableScissorTest) && m_curScissorRect == *rectPtr)
+				{
+					return;
+				}
+
+                glEnable(GL_SCISSOR_TEST);
+                m_curScissorRect = *rectPtr;
+                // 设置裁剪区域
+                glScissor((int)rectPtr->m_x, (int)rectPtr->m_y, (int)rectPtr->m_width, (int)rectPtr->m_height);
             }
 			break;
             case RenderState::EnableDepthTest:
             {
+                if (HasFlag(m_curRenderState, RenderState::EnableDepthTest))
+				{
+					return;
+				}
+
                 // 开启深度检测
                 glEnable(GL_DEPTH_TEST);
                 // 深度检测的比较函数, GL_LESS: 当前片元深度值小于当前深度缓冲区中深度值时通过测试
@@ -246,12 +347,18 @@ namespace sz_gui
             break;
             case RenderState::EnableBlend:
 			{
+                if (HasFlag(m_curRenderState, RenderState::EnableBlend))
+                {
+                    return;
+                }
+
                 // 开启混合
                 glEnable(GL_BLEND);
                 // 计算源像素(Source，新绘制的)和目标像素(Destination，颜色缓冲区中已有的的颜色混合方式，
                 // Final_Color = Source_Color x Source_Alpha + Destination_Color x (1 - Source_Alpha)
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
+            break;
 			default:
                 return;
 			}
@@ -265,16 +372,29 @@ namespace sz_gui
             {
             case RenderState::EnableScissorTest:
             {
+                if (!HasFlag(m_curRenderState, RenderState::EnableScissorTest))
+                {
+                    return;
+                }
                 glDisable(GL_SCISSOR_TEST);
+                m_curScissorRect = sz_ds::Rect();
             }
             break;
             case RenderState::EnableDepthTest:
             {
+                if (!HasFlag(m_curRenderState, RenderState::EnableDepthTest))
+                {
+					return;
+				}
                 glDisable(GL_DEPTH_TEST);
             } 
             break;
             case RenderState::EnableBlend:
             {
+                if (!HasFlag(m_curRenderState, RenderState::EnableBlend))
+                {
+                    return;
+                }
                 glDisable(GL_BLEND);
             }
 			break;

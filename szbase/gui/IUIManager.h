@@ -5,12 +5,13 @@
 #include <memory>
 
 #include "IUIBase.h"
-#include "ILayout.h"
 
 namespace sz_gui 
 {
 	// 前置声明
 	class IUIBase;
+	class IRender;
+	class ILayout;
 
 	// UI管理器抽象
 	class IUIManager
@@ -28,6 +29,8 @@ namespace sz_gui
 	public:
 		// 初始化
 		virtual void Init(int, int) = 0;
+		// 获取render
+		virtual const std::shared_ptr<IRender>& GetRender() const = 0;
 		// 注册顶层UI
 		virtual bool RegTopUI(std::shared_ptr<IUIBase>) = 0;
 		// 注销顶层UI
@@ -37,7 +40,7 @@ namespace sz_gui
 		// 注销UI
 		virtual bool UnRegUI(std::shared_ptr<IUIBase>) = 0;
 		// 处理事件
-		virtual bool HandleEvent(const std::any&) = 0;
+		virtual bool HandleEvent(std::any) = 0;
 		// 设置布局
 		virtual void SetLayout(ILayout*) = 0;
 		// 布局添加widget
@@ -46,9 +49,6 @@ namespace sz_gui
 		virtual bool LayoutDelWidget(std::shared_ptr<IUIBase>) = 0;
 		// 绘制
 		virtual void Render() = 0;
-		// 加入绘制数据
-		virtual void AppendDrawData(const std::vector<sz_ds::Vertex>&,
-			const std::vector<uint32_t>&, DrawCommand) = 0;
 		// 添加脏UI
 		virtual bool AddDirtyUI(std::shared_ptr<IUIBase>&) = 0;
 		// 清除所有脏矩形UI

@@ -42,6 +42,11 @@ namespace sz_gui
 	public:
 		// 初始化
 		void Init(int width, int height) override;
+		// 获取render
+		const std::shared_ptr<IRender>& GetRender() const override
+		{
+			return m_render;
+		}
 		// 注册顶层UI
 		bool RegTopUI(std::shared_ptr<IUIBase> topUI) override;
 		// 注销顶层UI
@@ -51,7 +56,7 @@ namespace sz_gui
 		// 注销UI
 		bool UnRegUI(std::shared_ptr<IUIBase> ui) override;
 		// 处理事件
-		bool HandleEvent(const std::any& eventContainer) override;
+		bool HandleEvent(std::any eventContainer) override;
 		// 设置布局
 		void SetLayout(ILayout* layout) override 
 		{ 
@@ -63,12 +68,6 @@ namespace sz_gui
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->DelWidget(widget); }
 		// 绘制
 		void Render() override;
-		// 加入绘制数据
-		void AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
-			const std::vector<uint32_t>& indices, DrawCommand cmdTemplate) override
-		{
-			m_render->AppendDrawData(vertices, indices, cmdTemplate);
-		}
 		// 添加脏UI
 		bool AddDirtyUI(std::shared_ptr<IUIBase>& ui) override
 		{

@@ -24,7 +24,7 @@ namespace sz_gui
             // 边距
             Margins margins;
             // 计算后的实际位置和大小
-            Rect calculatedRect;
+            sz_ds::Rect calculatedRect;
         };
 
         // 锚点布局
@@ -32,7 +32,7 @@ namespace sz_gui
         {
         private:
             // 父容器矩形
-            Rect m_parentRect;
+            sz_ds::Rect m_parentRect;
             // 需要布局的控件
             std::list<AnchorLayoutItem> m_items;
             // 记录需要布局的控件
@@ -40,7 +40,7 @@ namespace sz_gui
 
         public:
             // 设置父容器边界
-            void SetParentRect(const Rect& rect) override
+            void SetParentRect(const sz_ds::Rect& rect) override
             {
                 m_parentRect = rect;
             }
@@ -57,7 +57,7 @@ namespace sz_gui
 					return false;
 				}
                 
-                m_items.emplace_back(widget, widget->GetAnchorPoint(), widget->GetMargins(), Rect());
+                m_items.emplace_back(widget, widget->GetAnchorPoint(), widget->GetMargins(), sz_ds::Rect());
                 auto it = std::prev(m_items.end());
                 m_records.emplace(widget->GetChildIdForUIManager(), it);
                 return true;
@@ -103,7 +103,7 @@ namespace sz_gui
                 return actual;
             }
             // 计算控件矩形
-            Rect calculateItemRect(const AnchorLayoutItem& item) const;
+            sz_ds::Rect calculateItemRect(const AnchorLayoutItem& item) const;
         };
 	}
 }

@@ -1,6 +1,8 @@
 #include "UIFrame.h"
 
 #include <glm/glm.hpp>
+#include <memory>
+#include <cassert>
 
 namespace sz_gui
 {
@@ -28,7 +30,8 @@ namespace sz_gui
 		void UIFrame::OnWindowSizeChange()
 		{
 			// 重新布局
-			m_layout->SetParentRect(GetRect());
+			auto rect = GetRect().SubtractBorder(m_borderWidth);
+			m_layout->SetParentRect(rect);
 			m_layout->PerformLayout();
 
 			// 重新收集渲染数据
@@ -38,18 +41,16 @@ namespace sz_gui
 
 		void UIFrame::OnCollectRenderData()
 		{
-			glm::vec3 pos = GetPos();
-			sz_ds::AABB2D aabb(m_x, m_y, m_x + m_width, m_y + m_height);
-
-			if (!HasUIFlag(UIFlag::Top))
+			auto aabb = getIntersectWithParent();
+			if (aabb.IsNull())
 			{
-				pos += m_parent.lock()->GetPos();
+				return;
+			}
 
-				aabb = getIntersectWithParent();
-				if (!aabb.IsNull())
-				{
-					return;
-				}
+			if (aabb.GetRect() != GetRect()) [[unlikely]]
+			{
+				// 布局引擎有bug
+				assert(0);
 			}
 
 			// 生成渲染数据
@@ -86,21 +87,31 @@ namespace sz_gui
 			};
 
 			// 顶点数据索引
-			std::vector<uint32_t> indicesVec = { 0, 1, 3, 4 };
+			std::vector<uint32_t> indicesVec = { 0, 1, 2, 3 };
 
 			// 绘制命令
 			DrawCommand dCmd
 			{
 				m_type,
 				DrawMode::LINE_LOOP,
-				RenderState::EnableScissorTest | RenderState::EnableDepthTest,
-				indicesVec.size(),
-				{m_x+1, m_y+1, m_width-2, m_height-2},
+				RenderState::EnableDepthTest,
+				(uint32_t)indicesVec.size(),
 				m_texture2dUintId,
 				m_shaderId,
+				m_borderWidth,
 			};
 
-			m_uiManager.lock()->AppendDrawData(vertexVec, indicesVec, dCmd);
+			auto& render = m_uiManager.lock()->GetRender();
+			render->AppendDrawData(vertexVec, indicesVec, dCmd);
+
+			render->PushScissor({ m_x + m_borderWidth, m_y + m_borderWidth, 
+				(m_width - 2 * m_borderWidth), (m_height - 2 * m_borderWidth) });
+			// 递归收集子节点的渲染数据
+			for (auto& child : m_childMultimap)
+			{
+				child.second->OnCollectRenderData();
+			}
+			render->PopScissor();
 		}
 	}
 }

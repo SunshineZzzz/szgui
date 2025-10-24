@@ -101,19 +101,9 @@ namespace sz_gui
 	{
 		if (m_parent.expired()) 
 		{
-			return sz_ds::AABB2D();
+			return sz_ds::AABB2D(0.f, 0.f, 0.f, 0.f);
 		}
-
-		const sz_ds::AABB2D child_aabb(
-			m_x, m_y,
-			m_x + m_width, m_y + m_height
-		);
-		const sz_ds::AABB2D parent_aabb(
-			m_parent.lock()->GetPos().x, 
-			m_parent.lock()->GetPos().y,
-			m_parent.lock()->GetPos().x + m_parent.lock()->GetWidth(), 
-			m_parent.lock()->GetPos().y + m_parent.lock()->GetHeight()
-		);
-		return child_aabb.Intersection(parent_aabb);
+		
+		return GetRect().ToAABB2D().Intersection(m_parent.lock()->GetRect().ToAABB2D());
 	}
 }

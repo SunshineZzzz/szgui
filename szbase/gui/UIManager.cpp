@@ -18,11 +18,6 @@ namespace sz_gui
     {
         m_width = width;
         m_height = height;
-
-        m_render->SetViewPort(0, 0, width, height);
-        m_render->SetClearColor();
-        m_render->Clear();
-        m_render->SwapWindow();
     }
 
     bool UIManager::RegTopUI(std::shared_ptr<IUIBase> topUI)
@@ -133,9 +128,9 @@ namespace sz_gui
         return true;
     }
 
-	bool UIManager::HandleEvent(const std::any& eventContainer)
+	bool UIManager::HandleEvent(std::any eventContainer)
 	{
-		const SDL_Event* event = std::any_cast<const SDL_Event>(&eventContainer);
+		const SDL_Event* event = std::any_cast<SDL_Event>(&eventContainer);
         if (!event)
 		{
 			return false;
@@ -150,10 +145,7 @@ namespace sz_gui
         case SDL_EVENT_WINDOW_RESIZED:
         {
             // 窗口大小改变
-            m_width = event->window.data1;
-            m_height = event->window.data2;
             m_windowSizeChanged = true;
-            m_render->SetViewPort(0, 0, event->window.data1, event->window.data2);
         }
         break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -195,6 +187,8 @@ namespace sz_gui
                 it.second->OnWindowSizeChange();
             }
             
+            // 重新渲染所有UI组件
+            m_render->FullDraw();
             return;
         }
 

@@ -50,12 +50,12 @@ namespace sz_gui
 		RenderState m_renderState = RenderState::None;
 		// 顶点数据索引数量
 		uint32_t m_indexCount = 0;
-		// 裁剪区域
-		Rect scissor{};
 		// 要使用的纹理ID
 		uint32_t m_textureId = 0;
 		// 着色器Id
 		uint32_t m_shaderId = 0;
+		// 线宽
+		float m_lineWidth = 1.0f;
 		// 顶点数据偏移
 		uint32_t m_vertexOffset = 0;
 		// 顶点数据索引偏移
@@ -76,11 +76,6 @@ namespace sz_gui
 		IRender& operator=(IRender&&) = delete;
 
 	public:
-		// 带默认值设置清除颜色
-		virtual bool SetClearColor(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f) 
-		{
-			return SetClearColorImpl(r, g, b, a);
-		}
 		// 准备Shader
 		virtual std::tuple<std::string, bool> PrepareShader(const char* vertexShaderSource,
 			const char* fragmentShaderSource, const char* name = "default")
@@ -96,14 +91,6 @@ namespace sz_gui
 	public:
 		// 初始化
 		virtual std::tuple<std::string, bool> Init() = 0;
-		// 设置视口
-		virtual bool SetViewPort(int,int,int,int) = 0;
-		// 设置清除颜色
-		virtual bool SetClearColorImpl(float, float, float, float) = 0;
-		// 清除屏幕
-		virtual bool Clear() = 0;
-		// 交换缓冲区
-		virtual bool SwapWindow() = 0;
 		// 准备Shader
 		virtual std::tuple<std::string, bool> PrepareShaderImpl(const char*, const char*, const char*) = 0;
 		// 准备2D纹理
@@ -114,5 +101,13 @@ namespace sz_gui
 		// 加入绘制数据
 		virtual void AppendDrawData(const std::vector<sz_ds::Vertex>& vertices, 
 			const std::vector<uint32_t>& indices, DrawCommand cmdTemplate) = 0;
+		// 压入剪裁区域
+		virtual void PushScissor(const sz_ds::Rect& rect) = 0;
+		// 弹出剪裁区域
+		virtual void PopScissor() = 0;
+		// 全量绘制
+		virtual void FullDraw() = 0;
+		// 增量绘制
+		virtual void IncDraw() = 0;
 	};
 }

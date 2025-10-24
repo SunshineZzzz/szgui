@@ -172,6 +172,7 @@ int main(int argc, char* argv[])
         sz_gui::layout::AnchorPoint::Center, 
         sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
         0, 0, 1.0f);
+    frame->SetBorderWidth(2.0f);
     frame->SetTexture2dUnitId(0);
     frame->SetShaderId(app.GetShaderIdByName());
     frame->SetUIFlag(sz_gui::UIFlag::Top);

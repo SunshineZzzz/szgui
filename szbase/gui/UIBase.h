@@ -63,17 +63,17 @@ namespace sz_gui
 		float GetWidth() const override { return m_width; };
 		float GetHeight() const override { return m_height; };
 		// 获取矩形
-		const Rect GetRect() const override { return Rect{ m_x, m_y, m_width, m_height }; }
-		// 获取坐标
-		const glm::vec3 GetPos() const override { return glm::vec3{ m_x, m_y, m_z }; }
+		const sz_ds::Rect GetRect() const override { return sz_ds::Rect{ m_x, m_y, m_width, m_height }; }
 		// 设置矩形
-		void SetRect(const Rect& rect)
+		void SetRect(const sz_ds::Rect& rect)
 		{
 			m_x = rect.m_x;
 			m_y = rect.m_y;
 			m_width = rect.m_width;
 			m_height = rect.m_height;
 		}
+		// 获取坐标
+		const glm::vec3 GetPos() const override { return glm::vec3{ m_x, m_y, m_z }; }
 		// 获取AnchorPoint
 		layout::AnchorPoint GetAnchorPoint() const override { return m_anchorPoint; };
 		// 获取边距
@@ -127,7 +127,7 @@ namespace sz_gui
 		// 组件位置(相对于窗口)，深度(越大越说明在顶层)，和尺寸
 		float m_x = 0.0f;
 		float m_y = 0.0f;
-		float m_z = 0;		
+		float m_z = 0.0f;		
 		float m_width = 0.0f;
 		float m_height = 0.0f;
 		// 边距

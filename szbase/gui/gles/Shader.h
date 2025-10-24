@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #include <glm/glm.hpp>
 
 namespace sz_gui
