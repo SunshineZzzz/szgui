@@ -105,14 +105,14 @@ namespace sz_gui
 			auto& render = m_uiManager.lock()->GetRender();
 			render->AppendDrawData(vertexVec, indicesVec, dCmd);
 
-			render->PushScissor({ m_x + m_borderWidth, m_y + m_borderWidth, 
-				(m_width - 2 * m_borderWidth), (m_height - 2 * m_borderWidth) });
-			// 递归收集子节点的渲染数据
-			for (auto& child : m_childMultimap)
-			{
-				child.second->OnCollectRenderData();
-			}
-			render->PopScissor();
+			//render->PushScissor({ m_x + m_borderWidth, m_y + m_borderWidth, 
+			//	(m_width - 2 * m_borderWidth), (m_height - 2 * m_borderWidth) });
+			//// 递归收集子节点的渲染数据
+			//for (auto& child : m_childMultimap)
+			//{
+			//	child.second->OnCollectRenderData();
+			//}
+			//render->PopScissor();
 		}
 	}
 }

@@ -146,6 +146,8 @@ namespace sz_gui
         {
             // 窗口大小改变
             m_windowSizeChanged = true;
+            m_width = event->window.data1;
+            m_height = event->window.data2;
         }
         break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:

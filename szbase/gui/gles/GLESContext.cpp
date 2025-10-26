@@ -295,10 +295,10 @@ namespace sz_gui
             }
 
             const auto [width, height] = GetWindowSize();
-            // 2.清理屏幕和缓冲区
-            Clear();
-            // 3.设置视口
+            // 2.设置视口
             SetViewPort(0, 0, width, height);
+            // 3.清理
+            Clear();
             // 4.准备摄像机    
             PrepareCamera(width, height);
 
