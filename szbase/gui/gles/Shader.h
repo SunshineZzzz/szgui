@@ -33,6 +33,7 @@ namespace sz_gui
 			void SetUniformVector3(const std::string& name, const float* values) const;
 			void SetUniformInt(const std::string& name, int value) const;
 			void SetUniformMatrix4x4(const std::string& name, glm::mat4 value) const;
+			void SetUniformBool(const std::string& name, bool bValue) const;
 
 		private:
 			// 检测shader错误

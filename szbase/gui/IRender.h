@@ -56,6 +56,10 @@ namespace sz_gui
 		uint32_t m_shaderId = 0;
 		// 线宽
 		float m_lineWidth = 1.0f;
+		// 是否使用Color
+		bool m_useColor = true;
+		// 是否绘制文字
+		bool m_drawText = false;
 		// 顶点数据偏移
 		uint32_t m_vertexOffset = 0;
 		// 顶点数据索引偏移
@@ -109,5 +113,7 @@ namespace sz_gui
 		virtual void FullDraw() = 0;
 		// 增量绘制
 		virtual void IncDraw() = 0;
+		// 获取线宽范围
+		virtual std::tuple<float, float> GetLineWidthRange() const = 0;
 	};
 }

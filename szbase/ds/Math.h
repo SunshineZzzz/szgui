@@ -130,7 +130,7 @@ namespace sz_ds
         // 坐标
         Vec3 m_position;
         // 纹理
-        Vec3 m_texture;
+        Vec3 m_uv;
         // 颜色
         Rgba4Byte m_color;
     };

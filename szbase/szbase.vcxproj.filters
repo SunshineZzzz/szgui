@@ -1303,6 +1303,9 @@
     <ClInclude Include="gui\gles\OrthographicCamera.h">
       <Filter>szbase\gui\gles</Filter>
     </ClInclude>
+    <ClInclude Include="gui\gles\Geometry.h">
+      <Filter>szbase\gui\gles</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui\SDLApp.cpp">
@@ -1346,6 +1349,9 @@
       <Filter>szbase\gui\gles</Filter>
     </ClCompile>
     <ClCompile Include="gui\gles\OrthographicCamera.cpp">
+      <Filter>szbase\gui\gles</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\gles\Geometry.cpp">
       <Filter>szbase\gui\gles</Filter>
     </ClCompile>
   </ItemGroup>

@@ -521,6 +521,7 @@
     <ClInclude Include="gui\Common.h" />
     <ClInclude Include="gui\EventTypes.h" />
     <ClInclude Include="gui\gles\Camera.h" />
+    <ClInclude Include="gui\gles\Geometry.h" />
     <ClInclude Include="gui\gles\GLESContext.h" />
     <ClInclude Include="gui\gles\OrthographicCamera.h" />
     <ClInclude Include="gui\gles\Shader.h" />
@@ -543,6 +544,7 @@
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\detail\glm.cpp" />
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\glm.cppm" />
     <ClCompile Include="gui\gles\Camera.cpp" />
+    <ClCompile Include="gui\gles\Geometry.cpp" />
     <ClCompile Include="gui\gles\GLESContext.cpp" />
     <ClCompile Include="gui\gles\OrthographicCamera.cpp" />
     <ClCompile Include="gui\gles\Shader.cpp" />

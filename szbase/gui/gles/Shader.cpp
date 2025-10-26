@@ -170,6 +170,13 @@ namespace sz_gui
 			glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 		}
 
+		void Shader::SetUniformBool(const std::string& name, bool bValue) const
+		{
+			int val = bValue ? 1 : 0;
+			GLint location = glGetUniformLocation(m_program, name.c_str());
+			glUniform1i(location, val);
+		}
+
 		const std::string Shader::checkShaderErrors(GLuint target, std::string type)
 		{
 			int success = 0;

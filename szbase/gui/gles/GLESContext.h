@@ -20,6 +20,7 @@
 #include "Shader.h"
 #include "../../ds/Math.h"
 #include "OrthographicCamera.h"
+#include "Geometry.h"
 
 namespace sz_gui 
 {
@@ -79,6 +80,11 @@ namespace sz_gui
             void FullDraw() override;
             // 增量绘制
             void IncDraw() override;
+            // 获取线宽范围
+            std::tuple<float, float> GetLineWidthRange() const override
+            {
+                return { m_lineWidthRange[0], m_lineWidthRange[1] };
+            }
 
         public:
             // 设置视口
@@ -126,9 +132,26 @@ namespace sz_gui
             // 准备摄像机
             void PrepareCamera(int width, int height)
             {
-                m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), float(height), 0.0f, 1000.0f, -1000.0f);
+                m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), float(height), 0.0f, 100.0f, -100.f);
                 m_viewMatrix = m_camera->GetViewMatrix();
                 m_projectionMatrix = m_camera->GetProjectionMatrix();
+            }
+            // 上传绘制数据到 GPU
+            std::tuple<std::string, bool> UploadDrawData()
+            {
+                return m_geometry->Upload(m_vertexVec, m_indicesVec);
+            }
+            // 获取绘制命令
+            GLuint GetCmdByDrawMode(DrawMode mode)
+            {
+                switch (mode)
+				{
+                case DrawMode::LINE_LOOP:
+				    return GL_LINE_LOOP;
+                default:
+                    assert(0);
+				}
+                return GL_TRIANGLES;
             }
 
         private:
@@ -171,6 +194,10 @@ namespace sz_gui
             glm::mat4 m_projectionMatrix = glm::identity<glm::mat4>();
             // 摄像机
             std::unique_ptr<Camera> m_camera = nullptr;
+            // 几何对象
+            std::unique_ptr<Geometry> m_geometry = nullptr;
+            // 获取线宽范围
+            GLfloat m_lineWidthRange[2] = { 0.1f };
         };
     }
 }

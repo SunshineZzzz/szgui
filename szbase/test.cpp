@@ -171,14 +171,17 @@ int main(int argc, char* argv[])
     auto frame = std::make_shared<sz_gui::widget::UIFrame>("Center",
         sz_gui::layout::AnchorPoint::Center, 
         sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
-        0, 0, 1.0f);
-    frame->SetBorderWidth(2.0f);
+        0, 0, -99.0f);
+    app.RegToUI(frame);
+    app.LayoutAddWidget(frame);
+
+    frame->SetColor(sz_ds::Rgba4Byte(0, 0, 0, 1));
+    frame->SetBorderWidth(10.0f);
     frame->SetTexture2dUnitId(0);
     frame->SetShaderId(app.GetShaderIdByName());
     frame->SetUIFlag(sz_gui::UIFlag::Top);
     frame->SetLayout(new sz_gui::layout::AnchorLayout());
-    app.RegToUI(frame);
-    app.LayoutAddWidget(frame);
+
 
     auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
         sz_gui::layout::AnchorPoint::TopLeft, 

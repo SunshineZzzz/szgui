@@ -50,6 +50,7 @@ namespace sz_gui
             m_drawCommandsVec.clear();
             m_vertexVec.clear();
             m_indicesVec.clear();
+            m_geometry = nullptr;
 
             if (m_glesContext)
             {
@@ -75,9 +76,18 @@ namespace sz_gui
                 return { std::move(errMsg), false };
             }
 
+            m_geometry = std::make_unique<Geometry>();
+            auto [err, ok] = m_geometry->Create();
+            if (!ok)
+            {
+                errMsg = "failed to create geometry," + err;
+                return { std::move(errMsg), false };
+            }
+
             const char* vs =
             {
                 "#version 300 es\n"
+                "precision highp float;\n"
                 "layout(location = 0) in vec3 aPos;\n"
                 "layout(location = 1) in vec4 aColor;\n"
                 "layout(location = 2) in vec2 aUV;\n"
@@ -98,6 +108,7 @@ namespace sz_gui
             const char* ps =
             {
                 "#version 300 es\n"
+                "precision highp float;\n"
                 "out vec4 FragColor;\n"
                 "in vec4 color;\n"
                 "in vec2 uv;\n"
@@ -106,7 +117,7 @@ namespace sz_gui
                 "uniform bool isText;\n"
                 "void main()\n"
                 "{\n"
-                "   if (useColor)"
+                "   if (useColor && !isText)"
                 "   {\n"
                 "        FragColor = color;\n"
                 "        return;\n"
@@ -120,7 +131,7 @@ namespace sz_gui
                 "	FragColor = vec4(color.rgb * texColor.a, color.a * texColor.a);\n"
                 "}\n"
             };
-            auto [err, ok] = PrepareShader(vs, ps);
+            std::tie(err, ok) = PrepareShader(vs, ps);
             if (!ok)
 			{
 				errMsg = std::format("prepare shader error,{}", err);
@@ -131,6 +142,12 @@ namespace sz_gui
             EnableRenderState(RenderState::EnableDepthTest);
             // 开启混合
             EnableRenderState(RenderState::EnableBlend);
+
+            // 设置默认清除颜色
+            SetClearColor();
+
+            // 检查线宽的最小值和最大值
+            glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, m_lineWidthRange);
 
             return { std::move(errMsg), true };
         }
@@ -208,16 +225,16 @@ namespace sz_gui
         void GLESContext::AppendDrawData(const std::vector<sz_ds::Vertex>& vertices,
             const std::vector<uint32_t>& indices, DrawCommand cmd)
         {
-            // 1. 记录当前的全局大小作为偏移量
+            // 1.记录当前的全局大小作为偏移量
             const uint32_t vertexOffset = (uint32_t)m_vertexVec.size();
             const uint32_t indexOffset = (uint32_t)m_indicesVec.size();
 
-            // 2. 将顶点数据追加到全局顶点集合
+            // 2.将顶点数据追加到全局顶点集合
             m_vertexVec.reserve(m_vertexVec.size() + vertices.size());
             m_vertexVec.insert(m_vertexVec.end(), std::make_move_iterator(vertices.begin()), 
                 std::make_move_iterator(vertices.end()));
 
-            // 3. 将索引数据追加到全局索引集合，并进行索引偏移修正 (关键步骤!)
+            // 3.将索引数据追加到全局索引集合，并进行索引偏移修正 (关键步骤!)
             m_indicesVec.reserve(m_indicesVec.size() + indices.size());
             for (uint32_t index : indices) 
             {
@@ -225,12 +242,12 @@ namespace sz_gui
                 m_indicesVec.push_back(index + vertexOffset);
             }
 
-            // 4. 填充 DrawCommand 的几何引用信息
+            // 4.填充 DrawCommand 的几何引用信息
             cmd.m_vertexOffset = vertexOffset;
             cmd.m_indexOffset = indexOffset;
             cmd.m_indexCount = (uint32_t)indices.size();
 
-            // 5. 将完整的 DrawCommand 加入命令集合
+            // 5.将完整的 DrawCommand 加入命令集合
             m_drawCommandsVec.push_back(std::move(cmd));
         }
 
@@ -271,20 +288,86 @@ namespace sz_gui
 
         void GLESContext::FullDraw()
         {
+            // 1.检查是否有绘制命令
+            if (m_drawCommandsVec.empty())
+            {
+                return;
+            }
+
             const auto [width, height] = GetWindowSize();
-            // 清理
+            // 2.清理屏幕和缓冲区
             Clear();
-            // 设置视口
+            // 3.设置视口
             SetViewPort(0, 0, width, height);
-            // 准备摄像机    
-            PrepareCamera(GetWindowSize().first, GetWindowSize().second);
+            // 4.准备摄像机    
+            PrepareCamera(width, height);
 
+            // 5.上传所有批处理数据到 GPU
+            auto [err, ok] = UploadDrawData();
+            assert(ok);
 
+            // 6.绑定批处理vao
+            glBindVertexArray(m_geometry->GetVao());
+
+            // 7.遍历绘制命令并执行绘制
+            for (const auto& cmd : m_drawCommandsVec)
+            {
+                // 绑定shader
+                BeginUseShader(cmd.m_shaderId);
+
+                // 没有就崩把
+                auto shader = m_shaderMap[cmd.m_shaderId].get();
+
+                // 设置Shader Uniforms
+                shader->SetUniformMatrix4x4("modelMatrix", m_modelMatrix);
+                shader->SetUniformMatrix4x4("viewMatrix", m_viewMatrix);
+                shader->SetUniformMatrix4x4("projectionMatrix", m_projectionMatrix);
+
+                // 处理渲染状态
+                if (cmd.m_renderState != RenderState::None)
+                {
+                    // 深度测试
+                    HasFlag(cmd.m_renderState, RenderState::EnableDepthTest) ?
+                        EnableRenderState(RenderState::EnableDepthTest) :
+                        DisableRenderState(RenderState::EnableDepthTest);
+                    // 混合
+                    HasFlag(cmd.m_renderState, RenderState::EnableBlend) ?
+                        EnableRenderState(RenderState::EnableBlend) :
+                        DisableRenderState(RenderState::EnableBlend);
+                }
+                SetLineWidth(cmd.m_lineWidth);
+
+                // 设置是否使用Color
+                shader->SetUniformBool("useColor", cmd.m_useColor);
+                // 设置是否绘制文字
+                shader->SetUniformBool("isText", cmd.m_drawText);
+
+                if (!cmd.m_useColor || cmd.m_drawText)
+                {
+                    BeginUseTexture2D(cmd.m_textureId);
+                    shader->SetUniformInt("sampler", cmd.m_textureId);
+                }
+
+                // 执行绘制
+                GLsizei count = (GLsizei)cmd.m_indexCount;
+                GLvoid* offset = (GLvoid*)(cmd.m_indexOffset * sizeof(uint32_t));
+                glDrawElements(GetCmdByDrawMode(cmd.m_drawMode), count, GL_UNSIGNED_INT, offset);
+            }
+
+            // 8.清理CPU侧的绘制数据，为下一帧做准备
+            m_drawCommandsVec.clear();
+            m_vertexVec.clear();
+            m_indicesVec.clear();
+
+            // 9.解绑vao
+            glBindVertexArray(0);
+
+            // 10.交换缓冲区
+            SwapWindow();
         }
 
         void GLESContext::IncDraw()
         {
-
         }
 
         void GLESContext::SetViewPort(int x, int y, int width, int height)
@@ -338,7 +421,8 @@ namespace sz_gui
 				{
 					return;
 				}
-
+                // 设置清除深度缓冲区时使用的深度值
+                glClearDepthf(-1.0f);
                 // 开启深度检测
                 glEnable(GL_DEPTH_TEST);
                 // 深度检测的比较函数, GL_LESS: 当前片元深度值小于当前深度缓冲区中深度值时通过测试
@@ -436,14 +520,9 @@ namespace sz_gui
         
         void GLESContext::BeginUseTexture2D(uint32_t texture2dId)
         {
-            if (texture2dId == 0)
-            {
-                return;
-            }
-
             if (m_curTexture2dId == texture2dId)
 			{
-				return;
+                return;
 			}
 
 			m_curTexture2dId = texture2dId;

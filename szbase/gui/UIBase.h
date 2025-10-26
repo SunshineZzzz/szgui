@@ -99,8 +99,12 @@ namespace sz_gui
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
 		// 设置2d纹理单元Id
 		virtual void SetTexture2dUnitId(uint32_t id) override { m_texture2dUintId = id; }
+		// 设置使用颜色
+		virtual void SetUseColor(bool bUse) override { m_useColor = bUse; };
 		// 设置shaderId
 		virtual void SetShaderId(uint32_t id) override { m_shaderId = id; };
+		// 设置颜色
+		virtual void SetColor(sz_ds::Rgba4Byte color) override { m_color = color; }
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;
 		// 标记为脏
@@ -150,5 +154,9 @@ namespace sz_gui
 		uint32_t m_texture2dUintId = 0;
 		// shaderId
 		uint32_t m_shaderId = 0;
+		// 颜色
+		sz_ds::Rgba4Byte m_color;
+		// 是否使用颜色
+		bool m_useColor= false;
 	};
 }

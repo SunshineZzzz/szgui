@@ -47,7 +47,7 @@ namespace sz_gui
 				return;
 			}
 
-			if (aabb.GetRect() != GetRect()) [[unlikely]]
+			if (!m_parent.expired() && aabb.GetRect() != GetRect()) [[unlikely]]
 			{
 				// 布局引擎有bug
 				assert(0);
@@ -99,6 +99,7 @@ namespace sz_gui
 				m_texture2dUintId,
 				m_shaderId,
 				m_borderWidth,
+				m_useColor,
 			};
 
 			auto& render = m_uiManager.lock()->GetRender();

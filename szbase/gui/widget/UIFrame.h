@@ -38,6 +38,19 @@ namespace sz_gui
                 }
                 return m_layout->DelWidget(widget);
             }
+            // 设置边框宽度
+            bool SetBorderWidth(float width) 
+            {
+                auto& render = m_uiManager.lock()->GetRender();
+                auto [min, max] = render->GetLineWidthRange();
+                if (width < min || width > max)
+				{
+					return false;
+				}
+                m_borderWidth = width;
+                return true;
+            }
+
 
         public:
             // 鼠标点击事件，返回false将会阻止冒泡
@@ -46,8 +59,6 @@ namespace sz_gui
             void OnWindowSizeChange() override;
             // 收集渲染数据事件
             void OnCollectRenderData() override;
-            // 设置边框宽度
-            void SetBorderWidth(float width) { m_borderWidth = width; }
 
         private:
             // 布局
@@ -56,8 +67,6 @@ namespace sz_gui
             glm::vec2 m_uvLT;
             // UV右下角
             glm::vec2 m_uvRB;
-            // 颜色
-            sz_ds::Rgba4Byte m_color;
             // 边框宽度
             float m_borderWidth = 1.0f;
         };
