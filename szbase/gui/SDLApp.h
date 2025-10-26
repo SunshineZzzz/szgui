@@ -26,7 +26,9 @@ namespace sz_gui
 		std::tuple<const std::string, bool> CreateWindow(
 			const std::string& title, const int& width, const int& height);
 		// Run循环
-		void Run();
+		SDL_AppResult HandleEvent(SDL_Event* event);
+		// 渲染
+		void DoRender();
 		// 注册顶层UI
 		bool RegToUI(std::shared_ptr<IUIBase> ui);
 		// 注销顶层UI

@@ -130,7 +130,7 @@ namespace sz_gui
 
 	bool UIManager::HandleEvent(std::any eventContainer)
 	{
-		const SDL_Event* event = std::any_cast<SDL_Event>(&eventContainer);
+		const SDL_Event* event = std::any_cast<SDL_Event*>(eventContainer);
         if (!event)
 		{
 			return false;

@@ -16,8 +16,8 @@ namespace sz_gui
 			m_name = std::move(name);
 			m_anchorPoint = type;
 			m_margins = std::move(margins);
-			m_width = (float)desiredW;
-			m_height = (float)desiredH;
+			m_desireWidth = (float)desiredW;
+			m_desireHeight = (float)desiredH;
 			m_z = desiredZ;
 		}
 

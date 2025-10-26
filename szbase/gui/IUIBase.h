@@ -84,6 +84,8 @@ namespace sz_gui
 		// 获取宽高
 		virtual float GetWidth() const = 0;
 		virtual float GetHeight() const = 0;
+		// 获取期望宽高
+		virtual std::tuple<float, float> GetDisireWH() const = 0;
 		// 获取矩形
 		virtual const sz_ds::Rect GetRect() const = 0;
 		// 设置矩形

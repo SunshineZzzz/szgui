@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "../../ds/Math.h"
+#include "../../../ds/Math.h"
 
 namespace sz_gui
 {

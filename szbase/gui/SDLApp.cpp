@@ -1,5 +1,5 @@
 #include "SDLApp.h"
-#include "gles/GLESContext.h"
+#include "gl/GLESContext.h"
 #include "UIManager.h"
 
 namespace sz_gui
@@ -79,33 +79,32 @@ namespace sz_gui
         return { std::move(errMsg), true };
     }
 
-    void SDLApp::Run()
+    SDL_AppResult SDLApp::HandleEvent(SDL_Event* event)
     {
         if (!m_window || !m_render || !m_uiManager)
         {
-            return;
+            return SDL_APP_FAILURE;
         }
 
-        bool running = true;
-        SDL_Event event{};
-
-        while (running)
+        static bool isQuit = false;
+        if (event->type == SDL_EVENT_QUIT)
         {
-            while (SDL_PollEvent(&event))
-            {
-                if (event.type == SDL_EVENT_QUIT) 
-                {
-                    running = false;
-                }
-                else if (event.type == SDL_EVENT_WINDOW_RESIZED)
-				{
-					m_width = event.window.data1;
-					m_height = event.window.data2;
-				}
-                m_uiManager->HandleEvent(event);
-            }
-            m_uiManager->Render();
+            isQuit = true;
         }
+        else if (event->type == SDL_EVENT_WINDOW_RESIZED)
+        {
+            m_width = event->window.data1;
+            m_height = event->window.data2;
+        }
+
+        m_uiManager->HandleEvent(event);
+
+        return (isQuit ? SDL_APP_FAILURE : SDL_APP_CONTINUE);
+    }
+
+    void SDLApp::DoRender()
+    {
+        m_uiManager->Render();
     }
 
     bool SDLApp::RegToUI(std::shared_ptr<IUIBase> ui)

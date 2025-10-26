@@ -293,77 +293,79 @@ namespace sz_gui
             {
                 return;
             }
-
             const auto [width, height] = GetWindowSize();
             // 2.设置视口
             SetViewPort(0, 0, width, height);
             // 3.清理
             Clear();
-            // 4.准备摄像机    
-            PrepareCamera(width, height);
-
-            // 5.上传所有批处理数据到 GPU
-            auto [err, ok] = UploadDrawData();
-            assert(ok);
-
-            // 6.绑定批处理vao
-            glBindVertexArray(m_geometry->GetVao());
-
-            // 7.遍历绘制命令并执行绘制
-            for (const auto& cmd : m_drawCommandsVec)
+            for (int i = 0; i < 2; i++)
             {
-                // 绑定shader
-                BeginUseShader(cmd.m_shaderId);
+                
 
-                // 没有就崩把
-                auto shader = m_shaderMap[cmd.m_shaderId].get();
+                // 4.准备摄像机    
+                PrepareCamera(width, height);
 
-                // 设置Shader Uniforms
-                shader->SetUniformMatrix4x4("modelMatrix", m_modelMatrix);
-                shader->SetUniformMatrix4x4("viewMatrix", m_viewMatrix);
-                shader->SetUniformMatrix4x4("projectionMatrix", m_projectionMatrix);
+                // 5.上传所有批处理数据到 GPU
+                auto [err, ok] = UploadDrawData();
+                assert(ok);
 
-                // 处理渲染状态
-                if (cmd.m_renderState != RenderState::None)
+                // 6.绑定批处理vao
+                glBindVertexArray(m_geometry->GetVao());
+
+                // 7.遍历绘制命令并执行绘制
+                for (const auto& cmd : m_drawCommandsVec)
                 {
-                    // 深度测试
-                    HasFlag(cmd.m_renderState, RenderState::EnableDepthTest) ?
-                        EnableRenderState(RenderState::EnableDepthTest) :
-                        DisableRenderState(RenderState::EnableDepthTest);
-                    // 混合
-                    HasFlag(cmd.m_renderState, RenderState::EnableBlend) ?
-                        EnableRenderState(RenderState::EnableBlend) :
-                        DisableRenderState(RenderState::EnableBlend);
+                    // 绑定shader
+                    BeginUseShader(cmd.m_shaderId);
+
+                    // 没有就崩把
+                    auto shader = m_shaderMap[cmd.m_shaderId].get();
+
+                    // 设置Shader Uniforms
+                    shader->SetUniformMatrix4x4("modelMatrix", m_modelMatrix);
+                    shader->SetUniformMatrix4x4("viewMatrix", m_viewMatrix);
+                    shader->SetUniformMatrix4x4("projectionMatrix", m_projectionMatrix);
+
+                    // 处理渲染状态
+                    if (cmd.m_renderState != RenderState::None)
+                    {
+                        // 深度测试
+                        HasFlag(cmd.m_renderState, RenderState::EnableDepthTest) ?
+                            EnableRenderState(RenderState::EnableDepthTest) :
+                            DisableRenderState(RenderState::EnableDepthTest);
+                        // 混合
+                        HasFlag(cmd.m_renderState, RenderState::EnableBlend) ?
+                            EnableRenderState(RenderState::EnableBlend) :
+                            DisableRenderState(RenderState::EnableBlend);
+                    }
+                    SetLineWidth(cmd.m_lineWidth);
+
+                    // 设置是否使用Color
+                    shader->SetUniformBool("useColor", cmd.m_useColor);
+                    // 设置是否绘制文字
+                    shader->SetUniformBool("isText", cmd.m_drawText);
+
+                    if (!cmd.m_useColor || cmd.m_drawText)
+                    {
+                        BeginUseTexture2D(cmd.m_textureId);
+                        shader->SetUniformInt("sampler", cmd.m_textureId);
+                    }
+
+                    // 执行绘制
+                    GLsizei count = (GLsizei)cmd.m_indexCount;
+                    GLvoid* offset = (GLvoid*)(cmd.m_indexOffset * sizeof(uint32_t));
+                    glDrawElements(GetCmdByDrawMode(cmd.m_drawMode), count, GL_UNSIGNED_INT, offset);
                 }
-                SetLineWidth(cmd.m_lineWidth);
 
-                // 设置是否使用Color
-                shader->SetUniformBool("useColor", cmd.m_useColor);
-                // 设置是否绘制文字
-                shader->SetUniformBool("isText", cmd.m_drawText);
-
-                if (!cmd.m_useColor || cmd.m_drawText)
-                {
-                    BeginUseTexture2D(cmd.m_textureId);
-                    shader->SetUniformInt("sampler", cmd.m_textureId);
-                }
-
-                // 执行绘制
-                GLsizei count = (GLsizei)cmd.m_indexCount;
-                GLvoid* offset = (GLvoid*)(cmd.m_indexOffset * sizeof(uint32_t));
-                glDrawElements(GetCmdByDrawMode(cmd.m_drawMode), count, GL_UNSIGNED_INT, offset);
+                // 9.解绑vao
+                glBindVertexArray(0);
+                // 10.交换缓冲区
+                SwapWindow();
             }
-
             // 8.清理CPU侧的绘制数据，为下一帧做准备
             m_drawCommandsVec.clear();
             m_vertexVec.clear();
             m_indicesVec.clear();
-
-            // 9.解绑vao
-            glBindVertexArray(0);
-
-            // 10.交换缓冲区
-            SwapWindow();
         }
 
         void GLESContext::IncDraw()

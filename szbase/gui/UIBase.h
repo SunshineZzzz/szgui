@@ -72,6 +72,8 @@ namespace sz_gui
 			m_width = rect.m_width;
 			m_height = rect.m_height;
 		}
+		// 获取期望宽高
+		std::tuple<float, float> GetDisireWH() const override { return { m_desireWidth, m_desireHeight }; }
 		// 获取坐标
 		const glm::vec3 GetPos() const override { return glm::vec3{ m_x, m_y, m_z }; }
 		// 获取AnchorPoint
@@ -134,6 +136,9 @@ namespace sz_gui
 		float m_z = 0.0f;		
 		float m_width = 0.0f;
 		float m_height = 0.0f;
+		// 期望宽高
+		float m_desireWidth = 0.0f;
+		float m_desireHeight = 0.0f;
 		// 边距
 		layout::Margins m_margins;
 		// 锚点布局类型

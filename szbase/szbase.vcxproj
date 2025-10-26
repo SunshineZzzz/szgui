@@ -520,12 +520,12 @@
     <ClInclude Include="ds\Math.h" />
     <ClInclude Include="gui\Common.h" />
     <ClInclude Include="gui\EventTypes.h" />
-    <ClInclude Include="gui\gles\Camera.h" />
-    <ClInclude Include="gui\gles\Geometry.h" />
-    <ClInclude Include="gui\gles\GLESContext.h" />
-    <ClInclude Include="gui\gles\OrthographicCamera.h" />
-    <ClInclude Include="gui\gles\Shader.h" />
-    <ClInclude Include="gui\gles\Texture2D.h" />
+    <ClInclude Include="gui\gl\common\Camera.h" />
+    <ClInclude Include="gui\gl\common\Geometry.h" />
+    <ClInclude Include="gui\gl\common\OrthographicCamera.h" />
+    <ClInclude Include="gui\gl\common\Shader.h" />
+    <ClInclude Include="gui\gl\common\Texture2D.h" />
+    <ClInclude Include="gui\gl\GLESContext.h" />
     <ClInclude Include="gui\ILayout.h" />
     <ClInclude Include="gui\IRender.h" />
     <ClInclude Include="gui\IUIBase.h" />
@@ -543,12 +543,12 @@
   <ItemGroup>
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\detail\glm.cpp" />
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\glm.cppm" />
-    <ClCompile Include="gui\gles\Camera.cpp" />
-    <ClCompile Include="gui\gles\Geometry.cpp" />
-    <ClCompile Include="gui\gles\GLESContext.cpp" />
-    <ClCompile Include="gui\gles\OrthographicCamera.cpp" />
-    <ClCompile Include="gui\gles\Shader.cpp" />
-    <ClCompile Include="gui\gles\Texture2D.cpp" />
+    <ClCompile Include="gui\gl\common\Camera.cpp" />
+    <ClCompile Include="gui\gl\common\Geometry.cpp" />
+    <ClCompile Include="gui\gl\common\OrthographicCamera.cpp" />
+    <ClCompile Include="gui\gl\common\Shader.cpp" />
+    <ClCompile Include="gui\gl\common\Texture2D.cpp" />
+    <ClCompile Include="gui\gl\GLESContext.cpp" />
     <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />
     <ClCompile Include="gui\UIBase.cpp" />

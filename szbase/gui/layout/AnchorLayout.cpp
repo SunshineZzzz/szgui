@@ -22,18 +22,18 @@ namespace sz_gui
                 m_parentRect.m_height - pixelMargins.m_top - pixelMargins.m_bottom);
 
             // 获取控件的期望尺寸
-            sz_ds::Rect desiredSize = item.m_widget->GetRect();
+            auto [desireWidth, desireHeight]  = item.m_widget->GetDisireWH();
 
             // 在单点锚定模式下，控件的尺寸是期望尺寸与可用空间中的较小值
             result.m_width = availableWidth;
-            if (desiredSize.m_width != 0)
+            if (desireWidth > 0.0f)
             {
-                result.m_width = std::min(desiredSize.m_width, availableWidth);
+                result.m_width = std::min(desireWidth, availableWidth);
             }
             result.m_height = availableHeight;
-            if (desiredSize.m_height != 0)
+            if (desireHeight > 0.0f)
             {
-                result.m_height = std::min(desiredSize.m_height, availableHeight);
+                result.m_height = std::min(desireHeight, availableHeight);
             }
             
             switch (item.anchor)

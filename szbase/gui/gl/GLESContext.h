@@ -16,11 +16,11 @@
 #include <stack>
 
 #include "../IRender.h"
-#include "Texture2D.h"
-#include "Shader.h"
+#include "common/Texture2D.h"
+#include "common/Shader.h"
 #include "../../ds/Math.h"
-#include "OrthographicCamera.h"
-#include "Geometry.h"
+#include "common/OrthographicCamera.h"
+#include "common/Geometry.h"
 
 namespace sz_gui 
 {
