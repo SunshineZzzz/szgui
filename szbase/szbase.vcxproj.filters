@@ -65,11 +65,14 @@
     <Filter Include="szbase\utils">
       <UniqueIdentifier>{25da881b-0f59-428d-b23a-82cd0642acd0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="szbase\gui\gles">
-      <UniqueIdentifier>{5aefe58c-2f8d-4b40-8b9b-83953b465339}</UniqueIdentifier>
-    </Filter>
     <Filter Include="3rd\stb">
       <UniqueIdentifier>{c7de0b19-05e2-46cb-97be-1d82601dd3bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="szbase\gui\gl">
+      <UniqueIdentifier>{5aefe58c-2f8d-4b40-8b9b-83953b465339}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="szbase\gui\gl\common">
+      <UniqueIdentifier>{d627d925-2a1b-4187-b7d2-abf5b0972839}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1285,26 +1288,26 @@
     <ClInclude Include="ds\Math.h">
       <Filter>szbase\ds</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gles\Texture2D.h">
-      <Filter>szbase\gui\gles</Filter>
-    </ClInclude>
-    <ClInclude Include="gui\gles\GLESContext.h">
-      <Filter>szbase\gui\gles</Filter>
-    </ClInclude>
     <ClInclude Include="..\3rd\stb\stb_image.h">
       <Filter>3rd\stb</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gles\Shader.h">
-      <Filter>szbase\gui\gles</Filter>
+    <ClInclude Include="gui\gl\common\Camera.h">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gles\Camera.h">
-      <Filter>szbase\gui\gles</Filter>
+    <ClInclude Include="gui\gl\common\Geometry.h">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gles\OrthographicCamera.h">
-      <Filter>szbase\gui\gles</Filter>
+    <ClInclude Include="gui\gl\common\OrthographicCamera.h">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gles\Geometry.h">
-      <Filter>szbase\gui\gles</Filter>
+    <ClInclude Include="gui\gl\common\Shader.h">
+      <Filter>szbase\gui\gl\common</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\gl\common\Texture2D.h">
+      <Filter>szbase\gui\gl\common</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\gl\GLESContext.h">
+      <Filter>szbase\gui\gl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1336,23 +1339,23 @@
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\glm.cppm">
       <Filter>3rd\glm</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\Texture2D.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\common\Camera.cpp">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\GLESContext.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\common\Geometry.cpp">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\Shader.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\common\OrthographicCamera.cpp">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\Camera.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\common\Shader.cpp">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\OrthographicCamera.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\common\Texture2D.cpp">
+      <Filter>szbase\gui\gl\common</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gles\Geometry.cpp">
-      <Filter>szbase\gui\gles</Filter>
+    <ClCompile Include="gui\gl\GLESContext.cpp">
+      <Filter>szbase\gui\gl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
