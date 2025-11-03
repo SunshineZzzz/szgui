@@ -521,11 +521,14 @@
     <ClInclude Include="gui\Common.h" />
     <ClInclude Include="gui\EventTypes.h" />
     <ClInclude Include="gui\gl\Camera.h" />
+    <ClInclude Include="gui\gl\CheckRstErr.h" />
     <ClInclude Include="gui\gl\Geometry.h" />
     <ClInclude Include="gui\gl\GLContext.h" />
     <ClInclude Include="gui\gl\OrthographicCamera.h" />
+    <ClInclude Include="gui\gl\RenderItem.h" />
     <ClInclude Include="gui\gl\Shader.h" />
-    <ClInclude Include="gui\gl\Texture2D.h" />
+    <ClInclude Include="gui\gl\ShaderDefine.h" />
+    <ClInclude Include="gui\gl\Texture.h" />
     <ClInclude Include="gui\ILayout.h" />
     <ClInclude Include="gui\IRender.h" />
     <ClInclude Include="gui\IUIBase.h" />
@@ -533,7 +536,6 @@
     <ClInclude Include="gui\layout\AnchorLayout.h" />
     <ClInclude Include="gui\SDLApp.h" />
     <ClInclude Include="gui\UIBase.h" />
-    <ClInclude Include="gui\UIData.h" />
     <ClInclude Include="gui\UIManager.h" />
     <ClInclude Include="gui\widget\UIButton.h" />
     <ClInclude Include="gui\widget\UIFrame.h" />
@@ -549,7 +551,7 @@
     <ClCompile Include="gui\gl\GLContext.cpp" />
     <ClCompile Include="gui\gl\OrthographicCamera.cpp" />
     <ClCompile Include="gui\gl\Shader.cpp" />
-    <ClCompile Include="gui\gl\Texture2D.cpp" />
+    <ClCompile Include="gui\gl\Texture.cpp" />
     <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />
     <ClCompile Include="gui\UIBase.cpp" />

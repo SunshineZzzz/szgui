@@ -108,15 +108,9 @@ namespace sz_gui
 		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
 		// 鼠标点击事件，返回false将会阻止冒泡
 		virtual bool OnMouseButton(const events::MouseButtonEventData&) = 0;
-		// 窗户需要重绘事件
-		virtual void OnWindowRedraw() = 0;
+		// 窗户发生变化事件
+		virtual void OnWindowResize() = 0;
 		// 收集渲染数据事件
 		virtual void OnCollectRenderData() = 0;
-		// 标记为脏
-		virtual void MarkDirty() = 0;
-		// 清除脏标记
-		virtual void ClearDirty() = 0;
-		// 检查是否为脏
-		virtual bool IsDirty() const = 0;
 	};
 }

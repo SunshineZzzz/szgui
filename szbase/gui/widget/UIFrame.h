@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "../UIBase.h"
-#include "../UIData.h"
 
 namespace sz_gui 
 {
@@ -39,34 +38,19 @@ namespace sz_gui
                 }
                 return m_layout->DelWidget(widget);
             }
-            // 设置边框宽度
-            bool SetBorderWidth(float width) 
-            {
-                auto& render = m_uiManager.lock()->GetRender();
-                auto [min, max] = render->GetLineWidthRange();
-                if (width < min || width > max)
-				{
-					return false;
-				}
-                m_uiData.m_borderWidth = width;
-                return true;
-            }
-            // 获取边框宽度
-            float GetBorderWidth() const { return m_uiData.m_borderWidth; }
 
         public:
             // 鼠标点击事件，返回false将会阻止冒泡
             bool OnMouseButton(const events::MouseButtonEventData& data) override;
-            // 窗户需要重绘事件
-            void OnWindowRedraw() override;
+            // 窗户大小改变事件
+            void OnWindowResize() override;
             // 收集渲染数据事件
             void OnCollectRenderData() override;
 
         private:
             // 布局
             std::unique_ptr<ILayout> m_layout;
-            // 数据
-            FrameUIData m_uiData;
+            static constexpr float m_borderWidth = 1.0f;
         };
     }
 }

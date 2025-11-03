@@ -29,6 +29,8 @@ namespace sz_gui
 	public:
 		// 初始化
 		virtual void Init(int, int) = 0;
+		// 运行前工作
+		virtual void RunBeforWork() = 0;
 		// 获取render
 		virtual const std::shared_ptr<IRender>& GetRender() const = 0;
 		// 注册顶层UI
@@ -49,9 +51,5 @@ namespace sz_gui
 		virtual bool LayoutDelWidget(std::shared_ptr<IUIBase>) = 0;
 		// 绘制
 		virtual void Render() = 0;
-		// 添加脏UI
-		virtual bool AddDirtyUI(std::shared_ptr<IUIBase>) = 0;
-		// 清除所有脏矩形UI
-		virtual void ClearAllDirtyUI() = 0;
 	};
 }

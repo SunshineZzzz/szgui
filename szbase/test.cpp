@@ -1,6 +1,4 @@
-#define SDL_MAIN_USE_CALLBACKS
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
 
 #include "gui/SDLApp.h"
 
@@ -160,79 +158,28 @@ namespace Test_Delegate
     #pragma warning( pop )
 }
 
-SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     // Test_Delegate::Test_Delegate(argc, argv);
 
     sz_gui::SDLApp::InitSDL();
 
-    sz_gui::SDLApp* app = new sz_gui::SDLApp();
-    *appstate = app;
+    sz_gui::SDLApp app;
 
-    app->CreateWindow("test", 800, 600);
+    app.CreateWindow("test", 800, 600);
 
-    app->SetLayout(new sz_gui::layout::AnchorLayout());
+    app.SetLayout(new sz_gui::layout::AnchorLayout());
 
     auto frame = std::make_shared<sz_gui::widget::UIFrame>("Center",
         sz_gui::layout::AnchorPoint::Center,
         sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
-        0, 0, -99.0f);
-    app->RegToUI(frame);
-    app->LayoutAddWidget(frame);
-
-
-    frame->SetBorderWidth(10.0f);
-
+        0, 0, 1.0f);
+    app.RegToUI(frame);
+    app.LayoutAddWidget(frame);
     frame->SetUIFlag(sz_gui::UIFlag::Top);
     frame->SetLayout(new sz_gui::layout::AnchorLayout());
 
-    auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
-        sz_gui::layout::AnchorPoint::TopLeft,
-        sz_gui::layout::Margins::Percentage(25.0f, 25.0f, 0.0f, 0.0f),
-        20, 10, 1.1f);
-    btn1->SetParent(frame);
-    frame->AddWidget(btn1);
+    app.Run();
 
-    auto btn2 = std::make_shared<sz_gui::widget::UIButton>("TopRight",
-        sz_gui::layout::AnchorPoint::TopRight,
-        sz_gui::layout::Margins::Percentage(0.0f, 0.0f, 25.0f, 25.0f),
-        20, 10, 1.1f);
-    btn2->SetParent(frame);
-    frame->AddWidget(btn2);
-
-    auto btn3 = std::make_shared<sz_gui::widget::UIButton>("Center",
-        sz_gui::layout::AnchorPoint::Center, sz_gui::layout::Margins(0.0f),
-        20, 10, 1.1f);
-    btn3->SetParent(frame);
-    frame->AddWidget(btn3);
-
-    auto btn4 = std::make_shared<sz_gui::widget::UIButton>("BottomLeft",
-        sz_gui::layout::AnchorPoint::BottomLeft,
-        sz_gui::layout::Margins::Percentage(25.0f, 0.0f, 0.0f, 25.0f),
-        20, 10, 1.1f);
-    btn4->SetParent(frame);
-    frame->AddWidget(btn4);
-
-    return SDL_APP_CONTINUE;
-}
-
-SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
-{
-    sz_gui::SDLApp* app = static_cast<sz_gui::SDLApp*>(appstate);
-    return app->HandleEvent(event);
-}
-
-SDL_AppResult SDL_AppIterate(void* appstate)
-{
-    sz_gui::SDLApp* app = static_cast<sz_gui::SDLApp*>(appstate);
-    app->DoRender();
-
-    return SDL_APP_CONTINUE;
-}
-
-void SDL_AppQuit(void* appstate, SDL_AppResult result)
-{
-    sz_gui::SDLApp* app = static_cast<sz_gui::SDLApp*>(appstate);
-	delete app;
-    app = nullptr;
+    return 0;
 }

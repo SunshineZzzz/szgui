@@ -25,8 +25,8 @@ namespace sz_gui
 		// 创建窗口
 		std::tuple<const std::string, bool> CreateWindow(
 			const std::string& title, const int& width, const int& height);
-		// Run循环
-		SDL_AppResult HandleEvent(SDL_Event* event);
+		// 运行
+		void Run();
 		// 渲染
 		void DoRender();
 		// 注册顶层UI
@@ -39,14 +39,13 @@ namespace sz_gui
 		bool LayoutAddWidget(std::shared_ptr<IUIBase> widget);
 		// 布局移除widget
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget);
-		// 根据shader名称获取shaderId
-		uint32_t GetShaderIdByName(const std::string& name = "default") const;
 
 	private:
 		// SDL窗口指针
 		SDL_Window* m_window = nullptr;
 		// render
 		std::shared_ptr<IRender> m_render = nullptr;
+		// TODO UIScene
 		// UI管理器
 		std::shared_ptr<IUIManager> m_uiManager = nullptr;
 		// 窗口宽高

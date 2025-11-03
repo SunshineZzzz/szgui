@@ -1,7 +1,8 @@
 #include "Shader.h"
+#include "CheckRstErr.h"
 
 #include <fstream>
-#include<sstream>
+#include <sstream>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -34,7 +35,7 @@ namespace sz_gui
 		{
 			if (glIsProgram(m_program))
 			{
-				glDeleteProgram(m_program);
+				GL_CALL(glDeleteProgram(m_program));
 				m_program = 0;
 			}
 		}
@@ -66,16 +67,16 @@ namespace sz_gui
 		{
 			std::string errMsg = "success";
 
-			// 1.创建shader程序
+			// 创建shader程序
 			GLuint vertex, fragment;
 			vertex = glCreateShader(GL_VERTEX_SHADER);
 			fragment = glCreateShader(GL_FRAGMENT_SHADER);
 
-			// 2.shader程序输入代码
+			// shader程序输入代码
 			glShaderSource(vertex, 1, &vertexShaderSource, NULL);
 			glShaderSource(fragment, 1, &fragmentShaderSource, NULL);
 
-			// 3.执行shader代码编译 
+			// 执行shader代码编译 
 			glCompileShader(vertex);
 			// 检查编译错误
 			auto errStr = checkShaderErrors(vertex, "COMPILE");
@@ -98,14 +99,14 @@ namespace sz_gui
 				return { std::move(errMsg), false };
 			}
 
-			// 4.创建一个Program壳子
+			// 创建一个Program壳子
 			m_program = glCreateProgram();
 
-			// 5.将vs与fs编译好的结果放到program
+			// 将vs与fs编译好的结果放到program
 			glAttachShader(m_program, vertex);
 			glAttachShader(m_program, fragment);
 
-			// 6.执行program的链接操作，形成最终可执行shader程序
+			// 执行program的链接操作，形成最终可执行shader程序
 			glLinkProgram(m_program);
 			// 检查链接错误
 			errStr = checkShaderErrors(m_program, "LINK");
@@ -120,7 +121,7 @@ namespace sz_gui
 				return { std::move(errMsg), false };
 			}
 
-			// 7.清理
+			// 清理
 			glDeleteShader(vertex);
 			glDeleteShader(fragment);
 
@@ -129,52 +130,50 @@ namespace sz_gui
 
 		void Shader::Begin() const
 		{
-			glUseProgram(m_program);
+			GL_CALL(glUseProgram(m_program));
 		}
 
 		void Shader::End() const
 		{
-			glUseProgram(0);
+			GL_CALL(glUseProgram(0));
 		}
 
 
 		void Shader::SetUniformFloat(const std::string& name, float value) const
 		{
-			// 1.通过名称拿到Uniform变量的位置Location
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			// 2.通过Location更新Uniform变量的值
-			glUniform1f(location, value);
+			GL_CALL(glUniform1f(location, value));
 		}
 
 		void Shader::SetUniformVector3(const std::string& name, float x, float y, float z) const
 		{
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			glUniform3f(location, x, y, z);
+			GL_CALL(glUniform3f(location, x, y, z));
 		}
 
 		void Shader::SetUniformVector3(const std::string& name, const float* values) const
 		{
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			glUniform3fv(location, 1, values);
+			GL_CALL(glUniform3fv(location, 1, values));
 		}
 
 		void Shader::SetUniformInt(const std::string& name, int value) const
 		{
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			glUniform1i(location, value);
+			GL_CALL(glUniform1i(location, value));
 		}
 
 		void Shader::SetUniformMatrix4x4(const std::string& name, glm::mat4 value) const
 		{
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+			GL_CALL(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value)));
 		}
 
 		void Shader::SetUniformBool(const std::string& name, bool bValue) const
 		{
 			int val = bValue ? 1 : 0;
 			GLint location = glGetUniformLocation(m_program, name.c_str());
-			glUniform1i(location, val);
+			GL_CALL(glUniform1i(location, val));
 		}
 
 		const std::string Shader::checkShaderErrors(GLuint target, std::string type)

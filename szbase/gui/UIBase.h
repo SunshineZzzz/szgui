@@ -82,8 +82,8 @@ namespace sz_gui
 		layout::Margins GetMargins() const override  { return m_margins; };
 		// 鼠标点击事件，返回false将会阻止冒泡
 		bool OnMouseButton(const events::MouseButtonEventData&) override { return false; };
-		// 窗户大小需要重绘事件
-		void OnWindowRedraw() override { return; };
+		// 窗户发生变化事件
+		void OnWindowResize() override { return; };
 		// 收集渲染数据事件
 		void OnCollectRenderData() override { return; };
 		// 获取名称
@@ -101,12 +101,6 @@ namespace sz_gui
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;
-		// 标记为脏
-		void MarkDirty() override { m_dirty = true; };
-		// 清除脏标记
-		void ClearDirty() override { m_dirty = false; };
-		// 检查是否为脏
-		bool IsDirty() const override { return m_dirty; };
 
 	protected:
 		// UI管理器
@@ -135,8 +129,6 @@ namespace sz_gui
 		layout::Margins m_margins;
 		// 锚点布局类型
 		layout::AnchorPoint m_anchorPoint = layout::AnchorPoint::Center;
-		// 是否脏
-		bool m_dirty = false;
 		// 事件总线
 		sz_ds::EventBus m_eventbus;
 		// 名称

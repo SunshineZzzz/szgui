@@ -42,6 +42,8 @@ namespace sz_gui
 	public:
 		// 初始化
 		void Init(int width, int height) override;
+		// 运行前工作
+		void RunBeforWork() override;
 		// 获取render
 		const std::shared_ptr<IRender>& GetRender() const override
 		{
@@ -68,25 +70,6 @@ namespace sz_gui
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->DelWidget(widget); }
 		// 绘制
 		void Render() override;
-		// 添加脏UI
-		bool AddDirtyUI(std::shared_ptr<IUIBase> ui) override
-		{
-			if (!ui || ui->GetChildIdForUIManager() == 0)
-			{
-				return false;
-			}
-
-			if (m_allUIUnorderedmap.find(ui->GetChildIdForUIManager()) == m_allUIUnorderedmap.end())
-			{
-				return false;
-			}
-			
-			// 重复插入也算成功
-			m_dirtyUIIdVec.insert(ui->GetChildIdForUIManager());
-			return true;
-		}
-		// 清除所有脏矩形区域
-		void ClearAllDirtyUI() override { m_dirtyUIIdVec.clear(); }
 
 	private:
 		// 根据位置填充UI链
@@ -110,17 +93,11 @@ namespace sz_gui
 		AllChildUnorderedmap m_allUIUnorderedmap;
 		// 记录所有UI组件名称 <-> UIId
 		std::unordered_map<std::string, uint64_t> m_allNameUIUnorderedmap;
-		// 记录脏UIId，不关心顺序
-		std::set<uint64_t> m_dirtyUIIdVec;
 		// UIID生成器
 		uint64_t m_nextUIId = 1;
-		// 焦点UI
-		std::shared_ptr<IUIBase> m_focusUI = nullptr;
 		// 窗口宽高
 		int m_width = 0;
 		int m_height = 0;
-		// 窗口是否需要重绘
-		bool m_windowIsRedraw = false;
 		// 布局
 		std::unique_ptr<ILayout> m_layout;
 	};

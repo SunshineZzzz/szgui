@@ -5,30 +5,32 @@
 #include <vector>
 #include <cstdint>
 
+#include <glm/glm.hpp>
+
 #include "../utils/BitwiseEnum.h"
 #include "IUIBase.h"
 
 namespace sz_gui
 {
+	// 顶点环绕顺序
+	enum class FrontFaceType
+	{
+		// 逆时针
+		CCW,
+		// 顺时针
+		CW,
+	};
+	// 剔除方式
+	enum class CullFaceType
+	{
+		// 剔除正面
+		Front,
+		// 剔除背面
+		Back,
+	};
 	// 面剔除
 	struct FaceCulling
 	{
-		// 顶点环绕顺序
-		enum class FrontFaceType
-		{
-			// 逆时针
-			CCW,
-			// 顺时针
-			CW,
-		};
-		// 剔除方式
-		enum class CullFaceType
-		{
-			// 剔除正面
-			Front,
-			// 剔除背面
-			Back,
-		};
 		// 正面
 		FrontFaceType m_frontFace = FrontFaceType::CCW;
 		// 剔除正面还是背面
@@ -38,48 +40,38 @@ namespace sz_gui
 	// 剪裁测试
 	struct ScissorTest
 	{
-		float m_x, m_y;
-		float m_width, m_height;
+		int m_x, m_y;
+		int m_width, m_height;
 	};
 
+	// 深度测试函数
+	enum class DepthFuncType
+	{
+		// 小于
+		Less,
+		// 大于
+		Greater,
+	};
 	// 深度测试
 	struct DepthTest
 	{
-		// 深度测试函数
-		enum class DepthFuncType
-		{
-			// 小于
-			Less,
-			// 小于等于
-			LessEqual,
-			// 等于
-			Equal,
-			// 大于
-			Greater,
-			// 大于等于
-			GreaterEqual,
-			// 不等于
-			NotEqual,
-			// 总是
-			Always,
-		};
 		// 深度测试函数
 		DepthFuncType m_depthFunc = DepthFuncType::Less;
 		// 是否写入深度值
 		bool m_depthWrite{ true };
 	};
 
+	// 混合函数
+	enum class BlendFuncType
+	{
+		// C_source的alpha值
+		SRC_ALPHA,
+		// 1.0f - C_source的alpha值
+		ONE_MINUS_SRC_ALPHA,
+	};
 	// 混合
 	struct Blend
 	{
-		// 混合函数
-		enum class BlendFuncType
-		{
-			// C_source的alpha值
-			SRC_ALPHA,
-			// 1.0f - C_source的alpha值
-			ONE_MINUS_SRC_ALPHA,
-		};
 		// C_result = C_source * F_source + C_destination * F_destination
 		// 源颜色混合函数，F_source
 		BlendFuncType m_srcBlendFunc = BlendFuncType::SRC_ALPHA;
@@ -134,13 +126,11 @@ namespace sz_gui
 	// 绘制命令，描述一次绘制调用
 	struct DrawCommand 
 	{
-		// UI类型
-		UIType m_type = UIType::None;
 		// 绘制模式
 		DrawMode m_drawMode = DrawMode::None;
 		// 绘制状态
-		RenderState m_renderState = RenderState::EnableFaceCulling | 
-			RenderState::EnableDepthTest | RenderState::EnableBlend;
+		RenderState m_renderState = RenderState::EnableFaceCulling |
+			RenderState::EnableDepthTest;
 		// 材质类型
 		MaterialType m_materialType = MaterialType::ColorMaterial;
 		// 面剔除参数
@@ -153,8 +143,6 @@ namespace sz_gui
 		Blend m_blend;
 		// 顶点数据索引数量
 		size_t m_indexCount = 0;
-		// UI数据
-		std::any m_uiData = nullptr;
 	};
 
 	// 渲染接口
@@ -172,15 +160,14 @@ namespace sz_gui
 
 	public:
 		// 初始化
-		virtual std::tuple<std::string, bool> Init() = 0;
+		virtual std::tuple<std::string, bool> Init(int,int) = 0;
 		// 加入绘制数据
-		virtual void AppendDrawData(std::vector<float>&& positions, 
-			std::vector<uint32_t>&& indices, DrawCommand cmdTemplate) = 0;
-		// 全量绘制
-		virtual void FullDraw() = 0;
-		// 增量绘制
-		virtual void IncDraw() = 0;
-		// 获取线宽范围
-		virtual std::tuple<float, float> GetLineWidthRange() const = 0;
+		virtual void AppendDrawData(const glm::vec3& pos, const std::vector<float>& positions, 
+			const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices, 
+			DrawCommand cmd) = 0;
+		// 绘制
+		virtual void Render() = 0;
+		// 窗口大小改变事件
+		virtual void OnWindowResize(int,int) = 0;
 	};
 }

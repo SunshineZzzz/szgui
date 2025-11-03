@@ -20,6 +20,18 @@ namespace sz_gui
         m_height = height;
     }
 
+    void UIManager::RunBeforWork()
+    {
+        // 重新布局
+        m_layout->SetParentRect({ 0.0f, 0.0f, (float)m_width, (float)m_height });
+        m_layout->PerformLayout();
+        // 子组件重新布局
+        for (auto& it : m_topUIMultimap)
+        {
+            it.second->OnWindowResize();
+        }
+    }
+
     bool UIManager::RegTopUI(std::shared_ptr<IUIBase> topUI)
 	{
         if (!topUI)
@@ -142,12 +154,19 @@ namespace sz_gui
         {
         }
         break;
-        case SDL_EVENT_WINDOW_EXPOSED:
+        case SDL_EVENT_WINDOW_RESIZED:
         {
-            // 窗口大小改变
-            m_windowIsRedraw = true;
             m_width = event->window.data1;
             m_height = event->window.data2;
+
+            // 重新布局
+            m_layout->SetParentRect({ 0.0f, 0.0f, (float)m_width, (float)m_height });
+            m_layout->PerformLayout();
+            // 子组件重新布局
+            for (auto& it : m_topUIMultimap)
+            {
+                it.second->OnWindowResize();
+            }
         }
         break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -175,32 +194,13 @@ namespace sz_gui
         assert(m_allUIMultimap.size() == m_allUIUnorderedmap.size());
         assert(m_allNameUIUnorderedmap.size() == m_allUIUnorderedmap.size());
 
-        if (m_windowIsRedraw)
+        for (auto& it : m_topUIMultimap)
         {
-            // 窗口需要重绘
-            m_windowIsRedraw = false;
-
-            // 重新布局
-            m_layout->SetParentRect({ 0.0f, 0.0f, (float)m_width, (float)m_height });
-            m_layout->PerformLayout();
-
-            for (auto& it : m_topUIMultimap)
-            {
-                it.second->OnWindowRedraw();
-            }
-
-            // 重新渲染所有UI组件
-            m_render->FullDraw();
-            return;
+            it.second->OnCollectRenderData();
         }
 
-        if (!m_dirtyUIIdVec.empty())
-        {
-            // 渲染脏矩形区域
-            // 清除脏矩形区域列表
-            ClearAllDirtyUI();
-            return;
-        }
+        // 渲染所有UI组件
+        m_render->Render();
     }
 
     bool UIManager::findTargetWriteChainAtPoint(float x, float y, std::vector<std::weak_ptr<IUIBase>>& chain)

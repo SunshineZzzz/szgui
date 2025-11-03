@@ -1,9 +1,6 @@
-// comment: 2D纹理
+// comment: 纹理
 
 #pragma once
-
-#include <cstdint>
-#include <string>
 
 #ifdef USE_OPENGL_ES
 #include <GLES3/gl3.h>
@@ -11,15 +8,20 @@
 #include <glad/glad.h>
 #endif
 
+#include <cstdint>
+#include <string>
+
+#include "CheckRstErr.h"
+
 namespace sz_gui
 {
 	namespace gl
 	{
-		class Texture2D
+		class Texture
 		{
 		public:
-			Texture2D(uint32_t unit);
-			~Texture2D();
+			Texture(uint32_t unit);
+			~Texture();
 
 			std::tuple<const std::string, bool> Load(const std::string& path);
 			// 纹理单元与纹理对象绑定
@@ -27,8 +29,8 @@ namespace sz_gui
 			void Bind() const
 			{
 				// 先激活纹理单元，然后绑定纹理对象
-				glActiveTexture(GL_TEXTURE0 + m_unit);
-				glBindTexture(GL_TEXTURE_2D, m_texture);
+				GL_CALL(glActiveTexture(GL_TEXTURE0 + m_unit));
+				GL_CALL(glBindTexture(m_textureTarget, m_texture));
 			}
 
 		private:
@@ -39,6 +41,8 @@ namespace sz_gui
 			// 纹理宽高
 			int m_width{ 0 };
 			int m_height{ 0 };
+			// 纹理类型
+			GLuint m_textureTarget{ GL_TEXTURE_2D };
 		};
 	}
 }

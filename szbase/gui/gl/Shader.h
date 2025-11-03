@@ -16,7 +16,8 @@ namespace sz_gui
 {
 	namespace gl
 	{
-		class Shader {
+		class Shader 
+		{
 		public:
 			Shader() = default;
 			~Shader();

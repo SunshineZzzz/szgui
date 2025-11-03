@@ -1303,11 +1303,17 @@
     <ClInclude Include="gui\gl\Shader.h">
       <Filter>szbase\gui\gl</Filter>
     </ClInclude>
-    <ClInclude Include="gui\gl\Texture2D.h">
+    <ClInclude Include="gui\gl\Texture.h">
       <Filter>szbase\gui\gl</Filter>
     </ClInclude>
-    <ClInclude Include="gui\UIData.h">
-      <Filter>szbase\gui</Filter>
+    <ClInclude Include="gui\gl\CheckRstErr.h">
+      <Filter>szbase\gui\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\gl\RenderItem.h">
+      <Filter>szbase\gui\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\gl\ShaderDefine.h">
+      <Filter>szbase\gui\gl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1354,7 +1360,7 @@
     <ClCompile Include="gui\gl\Shader.cpp">
       <Filter>szbase\gui\gl</Filter>
     </ClCompile>
-    <ClCompile Include="gui\gl\Texture2D.cpp">
+    <ClCompile Include="gui\gl\Texture.cpp">
       <Filter>szbase\gui\gl</Filter>
     </ClCompile>
   </ItemGroup>

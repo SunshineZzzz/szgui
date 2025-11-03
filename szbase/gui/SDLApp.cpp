@@ -68,7 +68,7 @@ namespace sz_gui
         }
 
         m_render = std::make_shared<gl::GLContext>(m_window);
-        auto [err, ok] = m_render->Init();
+        auto [err, ok] = m_render->Init(m_width, m_height);
         if (!ok)
 		{
 			return { std::move(err), false };
@@ -80,27 +80,36 @@ namespace sz_gui
         return { std::move(errMsg), true };
     }
 
-    SDL_AppResult SDLApp::HandleEvent(SDL_Event* event)
+    void SDLApp::Run()
     {
         if (!m_window || !m_render || !m_uiManager)
         {
-            return SDL_APP_FAILURE;
+            return;
         }
 
-        static bool isQuit = false;
-        if (event->type == SDL_EVENT_QUIT)
+        bool running = true;
+        SDL_Event event{};
+
+        m_uiManager->RunBeforWork();
+
+        while (running)
         {
-            isQuit = true;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_EVENT_QUIT)
+                {
+                    running = false;
+                }
+                else if (event.type == SDL_EVENT_WINDOW_RESIZED)
+                {
+                    m_width = event.window.data1;
+                    m_height = event.window.data2;
+                    m_render->OnWindowResize(m_width, m_height);
+                }
+                m_uiManager->HandleEvent(&event);
+            }
+            m_uiManager->Render();
         }
-        else if (event->type == SDL_EVENT_WINDOW_RESIZED)
-        {
-            m_width = event->window.data1;
-            m_height = event->window.data2;
-        }
-
-        m_uiManager->HandleEvent(event);
-
-        return (isQuit ? SDL_APP_FAILURE : SDL_APP_CONTINUE);
     }
 
     void SDLApp::DoRender()
