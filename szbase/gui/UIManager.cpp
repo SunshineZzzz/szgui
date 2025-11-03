@@ -142,10 +142,10 @@ namespace sz_gui
         {
         }
         break;
-        case SDL_EVENT_WINDOW_RESIZED:
+        case SDL_EVENT_WINDOW_EXPOSED:
         {
             // 窗口大小改变
-            m_windowSizeChanged = true;
+            m_windowIsRedraw = true;
             m_width = event->window.data1;
             m_height = event->window.data2;
         }
@@ -175,10 +175,10 @@ namespace sz_gui
         assert(m_allUIMultimap.size() == m_allUIUnorderedmap.size());
         assert(m_allNameUIUnorderedmap.size() == m_allUIUnorderedmap.size());
 
-        // 如果窗口大小改变，重新渲染所有UI组件
-        if (m_windowSizeChanged)
+        if (m_windowIsRedraw)
         {
-            m_windowSizeChanged = false;
+            // 窗口需要重绘
+            m_windowIsRedraw = false;
 
             // 重新布局
             m_layout->SetParentRect({ 0.0f, 0.0f, (float)m_width, (float)m_height });
@@ -186,19 +186,17 @@ namespace sz_gui
 
             for (auto& it : m_topUIMultimap)
             {
-                it.second->OnWindowSizeChange();
+                it.second->OnWindowRedraw();
             }
-            
+
             // 重新渲染所有UI组件
             m_render->FullDraw();
             return;
         }
 
-        // 如果有脏矩形区域，则只渲染这些区域
         if (!m_dirtyUIIdVec.empty())
         {
-            // TODO: 实现脏矩形渲染逻辑
-
+            // 渲染脏矩形区域
             // 清除脏矩形区域列表
             ClearAllDirtyUI();
             return;

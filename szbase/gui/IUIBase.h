@@ -33,6 +33,8 @@ namespace sz_gui
 	{
 		// 默认
 		None,
+		// 文字
+		Text,
 		// 边框控件
 		Frame,
 		// 按钮控件
@@ -102,20 +104,12 @@ namespace sz_gui
 		virtual void SetUIFlag(UIFlag) = 0;
 		// 是否有UI标记
 		virtual bool HasUIFlag(UIFlag) const = 0;
-		// 设置2d纹理单元Id
-		virtual void SetTexture2dUnitId(uint32_t) = 0;
-		// 设置使用颜色
-		virtual void SetUseColor(bool) = 0;
-		// 设置shaderId
-		virtual void SetShaderId(uint32_t) = 0;
-		// 设置颜色
-		virtual void SetColor(sz_ds::Rgba4Byte) = 0;
 		// 获取当前UI和父UI的AABB2D交集
 		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
 		// 鼠标点击事件，返回false将会阻止冒泡
 		virtual bool OnMouseButton(const events::MouseButtonEventData&) = 0;
-		// 窗户大小发生改变事件
-		virtual void OnWindowSizeChange() = 0;
+		// 窗户需要重绘事件
+		virtual void OnWindowRedraw() = 0;
 		// 收集渲染数据事件
 		virtual void OnCollectRenderData() = 0;
 		// 标记为脏

@@ -17,10 +17,6 @@ namespace sz_ds
     class AxisAlignedBox2D;
     using AABB2D = AxisAlignedBox2D<float>;
     using AABB2Dd = AxisAlignedBox2D<double>;
-    template<typename T>
-    class VertexData;
-    using Vertex = VertexData<float>;
-    using Vertexd = VertexData<double>;
     
     // 容差比较函数示例
     template<typename T>
@@ -118,22 +114,6 @@ namespace sz_ds
             left.m_b == right.m_b &&
             left.m_a == right.m_a);
     }
-
-    // 顶点数据
-    template<typename T>
-    class VertexData
-    {
-    public:
-        using Vec3 = glm::vec<3, T, glm::defaultp>;
-        using Vec2 = glm::vec<2, T, glm::defaultp>;
-
-        // 坐标
-        Vec3 m_position;
-        // 纹理
-        Vec3 m_uv;
-        // 颜色
-        Rgba4Byte m_color;
-    };
 
     // 2D轴对齐边界框(Axis-Aligned Bounding Box, AABB)
     template<typename T>

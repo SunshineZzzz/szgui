@@ -6,7 +6,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		class Camera
 		{
@@ -18,8 +18,6 @@ namespace sz_gui
 			glm::mat4 GetViewMatrix();
 			// 获取投影矩阵
 			virtual glm::mat4 GetProjectionMatrix() = 0;
-			// 摄像机缩放
-			virtual void Scale(float deltaScale) = 0;
 
 		public:
 			// 默认相机在右手坐标系下，向下看

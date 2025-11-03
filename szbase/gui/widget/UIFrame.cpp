@@ -27,20 +27,25 @@ namespace sz_gui
 			return false;
 		}
 
-		void UIFrame::OnWindowSizeChange()
+		void UIFrame::OnWindowRedraw()
 		{
+			m_dirty = true;
+
 			// 重新布局
-			auto rect = GetRect().SubtractBorder(m_borderWidth);
+			auto rect = GetRect().SubtractBorder(GetBorderWidth());
 			m_layout->SetParentRect(rect);
 			m_layout->PerformLayout();
 
-			// 重新收集渲染数据
 			OnCollectRenderData();
-			return;
 		}
 
 		void UIFrame::OnCollectRenderData()
 		{
+			if (!m_dirty)
+			{
+				return;
+			}
+
 			auto aabb = getIntersectWithParent();
 			if (aabb.IsNull())
 			{
@@ -54,65 +59,39 @@ namespace sz_gui
 			}
 
 			// 生成渲染数据
-			std::vector<sz_ds::Vertex> vertexVec =
+			std::vector<float> positions = 
 			{
-				{
-					// 左上角
-					{m_x, m_y, m_z},
-					// 贴图区域的左上角
-					{m_uvLT.x, m_uvLT.y, 0.0f},
-					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
-				},
-				{
-					// 右上角
-					{m_x + m_width, m_y, m_z},
-					// 贴图区域的右上角
-					{m_uvRB.x, m_uvLT.y, 0.0f},
-					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
-				},
-				{
-					// 右下角
-					{m_x + m_width, m_y + m_height, m_z},
-					// 贴图区域的右下角
-					{m_uvRB.x, m_uvRB.y, 0.0f},
-					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
-				},
-				{
-					// 左下角
-					{m_x, m_y + m_height, m_z},
-					// 贴图区域的左下角
-					{m_uvLT.x, m_uvRB.y, 0.0f},
-					{m_color.m_r, m_color.m_g, m_color.m_b, m_color.m_a},
-				},
+				// 左上角
+				m_x, m_y, m_z,
+				// 右上角
+				m_x + m_width, m_y, m_z,
+				// 右下角
+				m_x + m_width, m_y + m_height, m_z,
+				// 左下角
+				m_x, m_y + m_height, m_z,
 			};
-
 			// 顶点数据索引
-			std::vector<uint32_t> indicesVec = { 0, 1, 2, 3 };
+			std::vector<uint32_t> indices = { 0, 1, 2, 3 };
 
+			auto borderWidth = GetBorderWidth();
 			// 绘制命令
-			DrawCommand dCmd
-			{
-				m_type,
-				DrawMode::LINE_LOOP,
-				RenderState::EnableDepthTest,
-				(uint32_t)indicesVec.size(),
-				m_texture2dUintId,
-				m_shaderId,
-				m_borderWidth,
-				m_useColor,
-			};
+			DrawCommand dCmd;
+			dCmd.m_type = m_type;
+			dCmd.m_drawMode = DrawMode::LINE_LOOP;
+			dCmd.m_renderState = dCmd.m_renderState | RenderState::EnableScissorTest;
+			dCmd.m_materialType = MaterialType::ColorMaterial;
+			dCmd.m_scissorTest = { m_x + borderWidth, m_y + borderWidth,
+				(m_width - 2 * borderWidth), (m_height - 2 * borderWidth) };
+			dCmd.m_uiData = &m_uiData;
 
 			auto& render = m_uiManager.lock()->GetRender();
-			render->AppendDrawData(vertexVec, indicesVec, dCmd);
+			render->AppendDrawData(std::move(positions), std::move(indices), dCmd);
 
-			//render->PushScissor({ m_x + m_borderWidth, m_y + m_borderWidth, 
-			//	(m_width - 2 * m_borderWidth), (m_height - 2 * m_borderWidth) });
-			//// 递归收集子节点的渲染数据
-			//for (auto& child : m_childMultimap)
-			//{
-			//	child.second->OnCollectRenderData();
-			//}
-			//render->PopScissor();
+			// 递归收集子节点的渲染数据
+			for (auto& child : m_childMultimap)
+			{
+				child.second->OnCollectRenderData();
+			}
 		}
 	}
 }

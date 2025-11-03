@@ -50,7 +50,7 @@ namespace sz_gui
 		// 绘制
 		virtual void Render() = 0;
 		// 添加脏UI
-		virtual bool AddDirtyUI(std::shared_ptr<IUIBase>&) = 0;
+		virtual bool AddDirtyUI(std::shared_ptr<IUIBase>) = 0;
 		// 清除所有脏矩形UI
 		virtual void ClearAllDirtyUI() = 0;
 	};

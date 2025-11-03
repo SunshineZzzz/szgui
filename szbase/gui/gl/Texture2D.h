@@ -5,11 +5,15 @@
 #include <cstdint>
 #include <string>
 
+#ifdef USE_OPENGL_ES
 #include <GLES3/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		class Texture2D
 		{

@@ -69,7 +69,7 @@ namespace sz_gui
 		// 绘制
 		void Render() override;
 		// 添加脏UI
-		bool AddDirtyUI(std::shared_ptr<IUIBase>& ui) override
+		bool AddDirtyUI(std::shared_ptr<IUIBase> ui) override
 		{
 			if (!ui || ui->GetChildIdForUIManager() == 0)
 			{
@@ -119,8 +119,8 @@ namespace sz_gui
 		// 窗口宽高
 		int m_width = 0;
 		int m_height = 0;
-		// 窗口大小发生变化，应用第一次创建当然也是窗口大小发生变化呢
-		bool m_windowSizeChanged = true;
+		// 窗口是否需要重绘
+		bool m_windowIsRedraw = false;
 		// 布局
 		std::unique_ptr<ILayout> m_layout;
 	};

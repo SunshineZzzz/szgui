@@ -4,7 +4,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		Camera::Camera() {}
 

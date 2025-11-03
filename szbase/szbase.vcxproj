@@ -100,7 +100,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_OPENGL_ES;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)..\3rd\SDL3-3.2.24\include;$(SolutionDir)..\3rd\ANGLE\include;$(SolutionDir)..\3rd\glm-1.0.1-light;$(SolutionDir)..\3rd\stb-2.30</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -520,12 +520,12 @@
     <ClInclude Include="ds\Math.h" />
     <ClInclude Include="gui\Common.h" />
     <ClInclude Include="gui\EventTypes.h" />
-    <ClInclude Include="gui\gl\common\Camera.h" />
-    <ClInclude Include="gui\gl\common\Geometry.h" />
-    <ClInclude Include="gui\gl\common\OrthographicCamera.h" />
-    <ClInclude Include="gui\gl\common\Shader.h" />
-    <ClInclude Include="gui\gl\common\Texture2D.h" />
-    <ClInclude Include="gui\gl\GLESContext.h" />
+    <ClInclude Include="gui\gl\Camera.h" />
+    <ClInclude Include="gui\gl\Geometry.h" />
+    <ClInclude Include="gui\gl\GLContext.h" />
+    <ClInclude Include="gui\gl\OrthographicCamera.h" />
+    <ClInclude Include="gui\gl\Shader.h" />
+    <ClInclude Include="gui\gl\Texture2D.h" />
     <ClInclude Include="gui\ILayout.h" />
     <ClInclude Include="gui\IRender.h" />
     <ClInclude Include="gui\IUIBase.h" />
@@ -533,6 +533,7 @@
     <ClInclude Include="gui\layout\AnchorLayout.h" />
     <ClInclude Include="gui\SDLApp.h" />
     <ClInclude Include="gui\UIBase.h" />
+    <ClInclude Include="gui\UIData.h" />
     <ClInclude Include="gui\UIManager.h" />
     <ClInclude Include="gui\widget\UIButton.h" />
     <ClInclude Include="gui\widget\UIFrame.h" />
@@ -543,12 +544,12 @@
   <ItemGroup>
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\detail\glm.cpp" />
     <ClCompile Include="..\3rd\glm-1.0.1-light\glm\glm.cppm" />
-    <ClCompile Include="gui\gl\common\Camera.cpp" />
-    <ClCompile Include="gui\gl\common\Geometry.cpp" />
-    <ClCompile Include="gui\gl\common\OrthographicCamera.cpp" />
-    <ClCompile Include="gui\gl\common\Shader.cpp" />
-    <ClCompile Include="gui\gl\common\Texture2D.cpp" />
-    <ClCompile Include="gui\gl\GLESContext.cpp" />
+    <ClCompile Include="gui\gl\Camera.cpp" />
+    <ClCompile Include="gui\gl\Geometry.cpp" />
+    <ClCompile Include="gui\gl\GLContext.cpp" />
+    <ClCompile Include="gui\gl\OrthographicCamera.cpp" />
+    <ClCompile Include="gui\gl\Shader.cpp" />
+    <ClCompile Include="gui\gl\Texture2D.cpp" />
     <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />
     <ClCompile Include="gui\UIBase.cpp" />

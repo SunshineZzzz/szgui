@@ -2,18 +2,20 @@
 
 #pragma once
 
+#ifdef USE_OPENGL_ES
 #include <GLES3/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
 
 #include <cstdint>
 #include <tuple>
 #include <string>
 #include <vector>
 
-#include "../../../ds/Math.h"
-
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		class Geometry
 		{
@@ -24,9 +26,10 @@ namespace sz_gui
 			// 创建VAO, VBO, EBO并配置顶点属性
 			std::tuple<std::string, bool> Create();
 			// 上传数据
-			std::tuple<std::string, bool> Upload(const std::vector<sz_ds::Vertex>& vertices, 
-				const std::vector<uint32_t>& indices);
-
+			std::tuple<std::string, bool> Upload(const std::vector<float>& positions, 
+				const std::vector<uint32_t>& colors, const std::vector<uint32_t>& indices);
+			std::tuple<std::string, bool> Upload(const std::vector<float>& positions,
+				const std::vector<float>& uvs, const std::vector<uint32_t>& indices);
 			// 获取VAO
 			GLuint GetVao() const { return m_vao; }
 			// 获取绘制索引个数

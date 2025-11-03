@@ -2,7 +2,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		Geometry::~Geometry()
 		{
@@ -90,43 +90,24 @@ namespace sz_gui
 		}
 
 		// 上传数据
-		std::tuple<std::string, bool> Geometry::Upload(const std::vector<sz_ds::Vertex>& vertices,
-			const std::vector<uint32_t>& indices)
+		std::tuple<std::string, bool> Geometry::Upload(const std::vector<float>& positions,
+			const std::vector<uint32_t>& colors, const std::vector<uint32_t>& indices)
 		{
 			std::string errMsg = "success";
 
-			if (vertices.empty() || indices.empty())
+			if (positions.empty() || colors.empty() || indices.empty())
 			{
-				errMsg = "empty vertices or indices";
+				errMsg = "empty positions or colors or indices";
 				return { std::move(errMsg), false };
 			}
 
-			if (m_vao == 0 || m_posVbo == 0 || 
-				m_colorVbo == 0 || m_uvVbo == 0 || 
-				m_ebo == 0)
+			if (m_vao == 0 || m_posVbo == 0 ||
+				m_colorVbo == 0 || m_ebo == 0)
 			{
 				errMsg = "vao or vbo or ebo is null";
 				return { std::move(errMsg), false };
 			}
 
-			std::vector<float> positions;
-			std::vector<uint32_t> packedColors;
-			std::vector<float> uvs;
-			positions.reserve(vertices.size() * 3);
-			packedColors.reserve(vertices.size());
-			uvs.reserve(vertices.size() * 2);
-
-			for (const auto& v : vertices)
-			{
-				positions.push_back(v.m_position.x);
-				positions.push_back(v.m_position.y);
-				positions.push_back(v.m_position.z);
-
-				packedColors.push_back(v.m_color.ToUint32());
-
-				uvs.push_back(v.m_uv.x);
-				uvs.push_back(v.m_uv.y);
-			}
 			m_indicesCount = (uint32_t)indices.size();
 
 			// 绑定vao
@@ -139,7 +120,44 @@ namespace sz_gui
 
 			// 上传color vbo
 			glBindBuffer(GL_ARRAY_BUFFER, m_colorVbo);
-			glBufferData(GL_ARRAY_BUFFER, packedColors.size() * sizeof(uint32_t), packedColors.data(), GL_DYNAMIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(uint32_t), colors.data(), GL_DYNAMIC_DRAW);
+
+			// 上传ebo
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indicesCount * sizeof(uint32_t), indices.data(), GL_DYNAMIC_DRAW);
+
+			// 解绑vao
+			glBindVertexArray(0);
+
+			return { std::move(errMsg), true };
+		}
+		std::tuple<std::string, bool> Geometry::Upload(const std::vector<float>& positions,
+			const std::vector<float>& uvs, const std::vector<uint32_t>& indices)
+		{
+			std::string errMsg = "success";
+
+			if (positions.empty() || uvs.empty() || indices.empty())
+			{
+				errMsg = "empty positions or uvs or indices";
+				return { std::move(errMsg), false };
+			}
+
+			if (m_vao == 0 || m_posVbo == 0 || 
+				m_uvVbo == 0 || m_ebo == 0)
+			{
+				errMsg = "vao or vbo or ebo is null";
+				return { std::move(errMsg), false };
+			}
+
+			m_indicesCount = (uint32_t)indices.size();
+
+			// 绑定vao
+			glBindVertexArray(m_vao);
+
+			// 上传position vbo
+			glBindBuffer(GL_ARRAY_BUFFER, m_posVbo);
+			// 使用GL_DYNAMIC_DRAW，因为UI数据每一帧都可能变化
+			glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(float), positions.data(), GL_DYNAMIC_DRAW);
 
 			// 上传uv vbo
 			glBindBuffer(GL_ARRAY_BUFFER, m_uvVbo);

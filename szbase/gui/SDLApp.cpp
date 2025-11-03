@@ -1,18 +1,20 @@
 #include "SDLApp.h"
-#include "gl/GLESContext.h"
+#include "gl/GLContext.h"
 #include "UIManager.h"
 
 namespace sz_gui
 {
-    std::tuple<std::string, bool> SDLApp::InitSDLWithANGLE()
+    std::tuple<std::string, bool> SDLApp::InitSDL()
     {
         std::string errMsg = "success";
 
+        #ifdef USE_OPENGL_ES
         if (!SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1"))
         {
             errMsg = "sdl es driver error," + std::string(SDL_GetError());
             return { std::move(errMsg), false };
         }
+        #endif
 
         if (!SDL_Init(SDL_INIT_VIDEO))
         {
@@ -20,7 +22,7 @@ namespace sz_gui
             return { std::move(errMsg), false };
         }
 
-        auto [err, ok] = gles::GLESContext::InitGLESAttributes();
+        auto [err, ok] = gl::GLContext::InitGLAttributes();
         if (!ok) 
         {
             return { std::move(errMsg), false };
@@ -28,7 +30,6 @@ namespace sz_gui
 
         return { std::move(errMsg), true };
     }
-
 
     SDLApp::SDLApp() {}
 
@@ -66,7 +67,7 @@ namespace sz_gui
             return { std::move(errMsg), false };
         }
 
-        m_render = std::make_shared<gles::GLESContext>(m_window);
+        m_render = std::make_shared<gl::GLContext>(m_window);
         auto [err, ok] = m_render->Init();
         if (!ok)
 		{
@@ -127,7 +128,6 @@ namespace sz_gui
         return m_uiManager->UnRegTopUI(ui);
     }
 
-
     bool SDLApp::SetLayout(ILayout* pLyout)
     {
         if (!m_window || !m_render || !m_uiManager)
@@ -158,14 +158,4 @@ namespace sz_gui
         
 		return m_uiManager->LayoutDelWidget(widget);
 	}
-
-    uint32_t SDLApp::GetShaderIdByName(const std::string& name) const
-    {
-        if (!m_window || !m_render || !m_uiManager)
-		{
-			return 0;
-		}
-
-		return m_render->GetShaderIdByName(name);
-    }
 }

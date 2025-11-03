@@ -7,7 +7,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		static std::tuple<const std::string, bool> readShaderFromFile(const char* szFilePath)
 		{

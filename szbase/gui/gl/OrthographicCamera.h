@@ -6,7 +6,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		class OrthographicCamera :public Camera
 		{
@@ -24,11 +24,8 @@ namespace sz_gui
 				m_near = n;
 				m_far = f;
 			}
-
 			// 获取投影矩阵
 			glm::mat4 GetProjectionMatrix() override;
-			// 摄像机缩放
-			void Scale(float deltaScale) override;
 
 		private:
 			// 投影盒子定义
@@ -44,8 +41,6 @@ namespace sz_gui
 			float m_near = 0.0f;
 			// 远平面
 			float m_far = 0.0f;
-			// 摄像机缩放比例
-			float m_scale{ 0.0f };
 		};
 	}
 }

@@ -7,7 +7,7 @@
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		Texture2D::Texture2D(uint32_t unit):
 			m_unit(unit)

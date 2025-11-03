@@ -162,9 +162,9 @@ namespace Test_Delegate
 
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
-    Test_Delegate::Test_Delegate(argc, argv);
+    // Test_Delegate::Test_Delegate(argc, argv);
 
-    sz_gui::SDLApp::InitSDLWithANGLE();
+    sz_gui::SDLApp::InitSDL();
 
     sz_gui::SDLApp* app = new sz_gui::SDLApp();
     *appstate = app;
@@ -180,10 +180,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     app->RegToUI(frame);
     app->LayoutAddWidget(frame);
 
-    frame->SetColor(sz_ds::Rgba4Byte(0, 0, 0, 1));
+
     frame->SetBorderWidth(10.0f);
-    frame->SetTexture2dUnitId(0);
-    frame->SetShaderId(app->GetShaderIdByName());
+
     frame->SetUIFlag(sz_gui::UIFlag::Top);
     frame->SetLayout(new sz_gui::layout::AnchorLayout());
 

@@ -2,14 +2,19 @@
 
 #pragma once
 
+#ifdef USE_OPENGL_ES
+#include <GLES3/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
+
 #include <string>
 
-#include <GLES3/gl3.h>
 #include <glm/glm.hpp>
 
 namespace sz_gui
 {
-	namespace gles
+	namespace gl
 	{
 		class Shader {
 		public:

@@ -15,8 +15,8 @@ namespace sz_gui
 	class SDLApp 
 	{
 	public:
-		// 初始化SDL & ANGLE
-		static std::tuple<std::string, bool> InitSDLWithANGLE();
+		// 初始化SDL
+		static std::tuple<std::string, bool> InitSDL();
 
 	public:
 		SDLApp();

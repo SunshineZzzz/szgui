@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "../UIBase.h"
+#include "../UIData.h"
 
 namespace sz_gui 
 {
@@ -47,28 +48,25 @@ namespace sz_gui
 				{
 					return false;
 				}
-                m_borderWidth = width;
+                m_uiData.m_borderWidth = width;
                 return true;
             }
-
+            // 获取边框宽度
+            float GetBorderWidth() const { return m_uiData.m_borderWidth; }
 
         public:
             // 鼠标点击事件，返回false将会阻止冒泡
             bool OnMouseButton(const events::MouseButtonEventData& data) override;
-            // 窗户大小发生改变事件
-            void OnWindowSizeChange() override;
+            // 窗户需要重绘事件
+            void OnWindowRedraw() override;
             // 收集渲染数据事件
             void OnCollectRenderData() override;
 
         private:
             // 布局
             std::unique_ptr<ILayout> m_layout;
-            // UV左上角
-            glm::vec2 m_uvLT;
-            // UV右下角
-            glm::vec2 m_uvRB;
-            // 边框宽度
-            float m_borderWidth = 1.0f;
+            // 数据
+            FrameUIData m_uiData;
         };
     }
 }
