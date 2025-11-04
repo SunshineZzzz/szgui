@@ -40,7 +40,7 @@ namespace sz_gui
             // 初始化
             std::tuple<std::string, bool> Init(int width, int height) override;
             // 加入绘制数据
-            void AppendDrawData(const glm::vec3& pos, const std::vector<float>& positions,
+            void AppendDrawData(const std::vector<float>& positions,
                 const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
                 DrawCommand cmd) override;
             // 渲染
@@ -53,6 +53,10 @@ namespace sz_gui
             }
 
         private:
+            // 上传数据到GPU
+            void uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
+                const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
+                DrawCommand cmd);
             // 获取绘制命令
             GLenum getDrawMode(DrawMode mode);
             // 绘制对象
@@ -78,6 +82,9 @@ namespace sz_gui
             }
 
         private:
+            using RenderItemLiist = std::list<std::unique_ptr<RenderItem>>;
+            using RenderItemIdUnmap = std::unordered_map<uint64_t, RenderItemLiist::iterator>;
+
             // SDL窗口指针
             SDL_Window* m_window = nullptr;
             // gl上下文
@@ -93,9 +100,11 @@ namespace sz_gui
             // 文字shader
             std::unique_ptr<Shader> m_textShader{ nullptr };
             // 不透明绘制对象
-            std::vector<std::unique_ptr<RenderItem>> m_opacityObjects;
+            RenderItemIdUnmap m_opacityUnmap;
+            RenderItemLiist m_opacityItems;
             // 透明绘制对象
-            std::vector<std::unique_ptr<RenderItem>> m_transparentObjects;
+            RenderItemIdUnmap m_transparentUnmap;
+            RenderItemLiist m_transparentItems;
         };
     }
 }

@@ -37,13 +37,6 @@ namespace sz_gui
 		CullFaceType m_cullFace = CullFaceType::Back;
 	};
 
-	// 剪裁测试
-	struct ScissorTest
-	{
-		int m_x, m_y;
-		int m_width, m_height;
-	};
-
 	// 深度测试函数
 	enum class DepthFuncType
 	{
@@ -82,6 +75,19 @@ namespace sz_gui
 		float m_opacity{ 1.0f };
 	};
 
+	// 上传行为
+	enum class UploadOperation : uint32_t
+	{
+		// 保持
+		Retain = 1 << 0,
+		// 上传Pos
+		UploadPos = 1 << 1,
+		// 上传UV或者Color
+		UploadColorOrUv = 1 << 2,
+		// 上传Index
+		UploadIndex = 1 << 3,
+	};
+
 	// 绘制状态
 	enum class RenderState : uint32_t
 	{
@@ -89,8 +95,6 @@ namespace sz_gui
 		None = 1 << 0,
 		// 开启面剔除
 		EnableFaceCulling = 1 << 1,
-		// 开启剪裁测试
-		EnableScissorTest = 1 << 2,
 		// 开启深度测试
 		EnableDepthTest = 1 << 3,
 		// 开启混合
@@ -100,6 +104,7 @@ namespace sz_gui
 	USING_BITMASK_OPERATORS()
 }
 ENABLE_BITMASK_OPERATORS(sz_gui::RenderState)
+ENABLE_BITMASK_OPERATORS(sz_gui::UploadOperation)
 
 namespace sz_gui
 {
@@ -126,6 +131,12 @@ namespace sz_gui
 	// 绘制命令，描述一次绘制调用
 	struct DrawCommand 
 	{
+		// 唯一Id
+		uint64_t m_onlyId;
+		// 世界位置
+		glm::vec3 m_worldPos;
+		// 是否需要重新上传数据	
+		UploadOperation m_uploadOp = UploadOperation::Retain;
 		// 绘制模式
 		DrawMode m_drawMode = DrawMode::None;
 		// 绘制状态
@@ -135,8 +146,6 @@ namespace sz_gui
 		MaterialType m_materialType = MaterialType::ColorMaterial;
 		// 面剔除参数
 		FaceCulling m_faceCulling;
-		// 剪裁测试参数
-		ScissorTest m_scissorTest;
 		// 深度测试参数
 		DepthTest m_depthTest;
 		// 混合参数
@@ -162,8 +171,8 @@ namespace sz_gui
 		// 初始化
 		virtual std::tuple<std::string, bool> Init(int,int) = 0;
 		// 加入绘制数据
-		virtual void AppendDrawData(const glm::vec3& pos, const std::vector<float>& positions, 
-			const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices, 
+		virtual void AppendDrawData(const std::vector<float>& positions, const std::vector<float>& colorOrUVs, 
+			const std::vector<uint32_t>& indices, 
 			DrawCommand cmd) = 0;
 		// 绘制
 		virtual void Render() = 0;

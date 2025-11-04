@@ -19,10 +19,19 @@ namespace sz_gui
 		class Geometry
 		{
 		public:
-			Geometry() = default;
+			Geometry(size_t posCapacity, size_t colorOruvCapacity, 
+				size_t indicesCapacity, bool useColor);
 			~Geometry();
 
 			// 上传
+			void UploadPositions(const std::vector<float>& positions);
+			void UploadColorsOrUVs(const std::vector<float>& colorsOruvs);
+			void UploadIndices(const std::vector<uint32_t>& indices);
+			// 上传所有
+			void UploadAll(const std::vector<float>& positions,
+				const std::vector<float>& uvsOrColors,
+				const std::vector<uint32_t>& indices
+			);
 			void UploadUVs(const std::vector<float>& positions,
 				const std::vector<float>& uvs,
 				const std::vector<uint32_t>& indices
@@ -51,6 +60,12 @@ namespace sz_gui
 			GLuint m_ebo{ 0 };
 			// 绘制索引个数
 			size_t m_indicesCount{ 0 };
+			// 是否使用颜色
+			bool m_useColor{ false };
+			// 顶点容量
+			size_t m_posCapacity{ 0 };
+			size_t m_colorOrUVCapacity{ 0 };
+			size_t m_indicesCapacity{ 0 };
 		};
 	}
 }

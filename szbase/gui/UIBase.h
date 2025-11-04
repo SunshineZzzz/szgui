@@ -83,7 +83,11 @@ namespace sz_gui
 		// 鼠标点击事件，返回false将会阻止冒泡
 		bool OnMouseButton(const events::MouseButtonEventData&) override { return false; };
 		// 窗户发生变化事件
-		void OnWindowResize() override { return; };
+		void OnWindowResize() override 
+		{ 
+			m_uploadOp |= UploadOperation::UploadPos; 
+			return; 
+		};
 		// 收集渲染数据事件
 		void OnCollectRenderData() override { return; };
 		// 获取名称
@@ -101,6 +105,15 @@ namespace sz_gui
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;
+
+	protected:
+		// 获取上传操作
+		UploadOperation getUploadOp()  
+		{
+			auto op = m_uploadOp;
+			m_uploadOp = UploadOperation::Retain;
+			return op;
+		}
 
 	protected:
 		// UI管理器
@@ -139,5 +152,8 @@ namespace sz_gui
 		UIFlag m_flag = UIFlag::Visibale;
 		// UI类型
 		UIType m_type = UIType::None;
+		// 上传操作
+		UploadOperation m_uploadOp = UploadOperation::UploadColorOrUv | 
+			UploadOperation::UploadPos | UploadOperation::UploadIndex;
 	};
 }

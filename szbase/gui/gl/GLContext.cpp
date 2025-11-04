@@ -104,25 +104,54 @@ namespace sz_gui
             return { std::move(errMsg), true };
         }
 
-        void GLContext::AppendDrawData(const glm::vec3& pos, 
-            const std::vector<float>& positions, const std::vector<float>& colorOrUVs,
+        void GLContext::AppendDrawData(const std::vector<float>& positions, 
+            const std::vector<float>& colorOrUVs,
             const std::vector<uint32_t>& indices, DrawCommand cmd)
         { 
-            auto ri = std::make_unique<RenderItem>();
-            ri->m_position = pos;
-            ri->m_drawMode = getDrawMode(cmd.m_drawMode);
-            ri->m_geo = std::make_unique<Geometry>();
-            if (cmd.m_materialType == MaterialType::ColorMaterial)
+            assert(cmd.m_onlyId);
+
+            RenderItem* ri = nullptr;
+            bool oldOpcacity = false;
+            bool oldTransparent = false;
+
+            auto oIt = m_opacityUnmap.find(cmd.m_onlyId);
+            auto tIt = m_transparentUnmap.find(cmd.m_onlyId);
+            if (oIt == m_opacityUnmap.end() && tIt == m_transparentUnmap.end())
             {
-                ri->m_geo->UploadColors(positions, colorOrUVs, indices);
+                ri = new RenderItem();
+                bool useColor = (cmd.m_materialType == MaterialType::ColorMaterial);
+                ri->m_geo = std::make_unique<Geometry>(
+                    positions.size() * sizeof(float), 
+                    colorOrUVs.size() * sizeof(float), 
+                    indices.size() * sizeof(uint32_t), useColor);
             }
-            else if (cmd.m_materialType == MaterialType::TextureMaterial)
+            else if (oIt == m_opacityUnmap.end())
             {
+                oldTransparent = true;
+                ri = tIt->second->get();
             }
-            else if (cmd.m_materialType == MaterialType::TextMaterial)
+            else
             {
+                oldOpcacity = true;
+                ri = oIt->second->get();
             }
 
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend) && oldOpcacity)
+            {
+                auto oldRenderItem = std::move(*(oIt->second));
+                m_opacityItems.erase(oIt->second);
+                m_opacityUnmap.erase(oIt);
+
+                auto it = m_transparentItems.insert(m_transparentItems.end(), std::move(oldRenderItem));
+                m_transparentUnmap[cmd.m_onlyId] = it;
+                oldOpcacity = false;
+                oldTransparent = true;
+            }
+
+            ri->m_position = cmd.m_worldPos;
+            ri->m_drawMode = getDrawMode(cmd.m_drawMode);
+            uploadToGPU(ri, positions, colorOrUVs, indices, cmd);
+            
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableFaceCulling))
             {
                 ri->m_cullFace = true;
@@ -131,9 +160,7 @@ namespace sz_gui
                 ri->m_cullFace = (cmd.m_faceCulling.m_cullFace ==
                     CullFaceType::Back ? GL_BACK : GL_FRONT);
             }
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorTest))
-            {
-            }
+
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableDepthTest))
             {
                 ri->m_depthTest = true;
@@ -152,12 +179,63 @@ namespace sz_gui
                 ri->m_opacity = cmd.m_blend.m_opacity;
             }
 
-            if (ri->m_blend)
+            if (oldOpcacity || oldTransparent)
             {
-                m_transparentObjects.push_back(std::move(ri));
                 return;
             }
-            m_opacityObjects.push_back(std::move(ri));
+
+            if (ri->m_blend)
+            {
+                m_transparentItems.push_back(std::unique_ptr<RenderItem>(ri));
+                m_transparentUnmap[cmd.m_onlyId] = std::prev(m_transparentItems.end());
+                return;
+            }
+
+            m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
+			m_opacityUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
+        }
+
+        void GLContext::uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
+            const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
+            DrawCommand cmd)
+        {
+            if (cmd.m_uploadOp == UploadOperation::Retain)
+            {
+                return;
+            }
+
+            if (cmd.m_materialType == MaterialType::ColorMaterial)
+            {
+                if (cmd.m_uploadOp == (UploadOperation::UploadPos |
+                    UploadOperation::UploadColorOrUv | UploadOperation::UploadIndex))
+                {
+                    ri->m_geo->UploadAll(positions, colorOrUVs, indices);
+					return;
+                }
+
+                if (sz_utils::HasFlag(cmd.m_uploadOp, UploadOperation::UploadPos))
+				{
+					ri->m_geo->UploadPositions(positions);
+				}
+				if (sz_utils::HasFlag(cmd.m_uploadOp, UploadOperation::UploadColorOrUv))
+				{
+					ri->m_geo->UploadColorsOrUVs(colorOrUVs);
+				}
+				if (sz_utils::HasFlag(cmd.m_uploadOp, UploadOperation::UploadIndex))
+				{
+					ri->m_geo->UploadIndices(indices);
+				}
+            }
+
+            if (cmd.m_materialType == MaterialType::TextureMaterial)
+            {
+                assert(0);
+            }
+
+            if (cmd.m_materialType == MaterialType::TextMaterial)
+            {
+                assert(0);
+            }
         }
 
         void GLContext::Render()
@@ -180,9 +258,7 @@ namespace sz_gui
             GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             // 先绘制不透明物体，透明物体按照距离摄像机远近排序，由远到近绘制
-            std::sort(
-                m_transparentObjects.begin(),
-                m_transparentObjects.end(),
+            m_transparentItems.sort(
                 [this](const std::unique_ptr<RenderItem>& a, const std::unique_ptr<RenderItem>& b) {
                     auto viewMatrix = m_camera->GetViewMatrix();
 
@@ -196,26 +272,24 @@ namespace sz_gui
                     auto worldPositionB = modelMatrixB * glm::vec4(0.0, 0.0, 0.0, 1.0);
                     auto cameraPositionB = viewMatrix * worldPositionB;
 
-                    return cameraPositionA.z > cameraPositionB.z;
+                    return cameraPositionA.z < cameraPositionB.z;
                 }
             );
 
+
             // 先绘制不透明物体
-            for (int i = 0; i < m_opacityObjects.size(); i++)
+            for (const auto& item : m_opacityItems)
             {
-                renderObject(m_opacityObjects[i]);
+                renderObject(item);
             }
 
             // 透明物体按照距离摄像机远近排序，由远到近绘制
-            for (int i = 0; i < m_transparentObjects.size(); i++)
+            for (const auto& item : m_transparentItems)
             {
-                renderObject(m_transparentObjects[i]);
+                renderObject(item);
             }
 
             SDL_GL_SwapWindow(m_window);
-
-            m_transparentObjects.clear();
-            m_opacityObjects.clear();
         }
 
         GLenum GLContext::getDrawMode(DrawMode mode)

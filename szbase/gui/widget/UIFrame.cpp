@@ -30,6 +30,8 @@ namespace sz_gui
 
 		void UIFrame::OnWindowResize()
 		{
+			UIBase::OnWindowResize();
+
 			// 重新布局
 			auto rect = GetRect().SubtractBorder(m_borderWidth);
 			m_layout->SetParentRect(rect);
@@ -75,11 +77,14 @@ namespace sz_gui
 
 			// 绘制命令
 			DrawCommand dCmd;
+			dCmd.m_onlyId = m_childIdForUIManager;
+			dCmd.m_worldPos = { m_x, m_y, m_z };
+			dCmd.m_uploadOp = getUploadOp();
 			dCmd.m_drawMode = DrawMode::LINE_LOOP;
 			dCmd.m_materialType = MaterialType::ColorMaterial;
 
 			auto& render = m_uiManager.lock()->GetRender();
-			render->AppendDrawData({m_x, m_y, m_z}, positions, colors, indices, dCmd);
+			render->AppendDrawData(positions, colors, indices, dCmd);
 
 			// 递归收集子节点的渲染数据
 			//for (auto& child : m_childMultimap)
