@@ -75,6 +75,14 @@ namespace sz_gui
 		float m_opacity{ 1.0f };
 	};
 
+	// 剪裁测试
+	struct ScissorTest
+	{
+		bool m_scissorTest{ false };
+		int32_t m_x, m_y;
+		int32_t m_width, m_height;
+	};
+
 	// 上传行为
 	enum class UploadOperation : uint32_t
 	{
@@ -91,7 +99,7 @@ namespace sz_gui
 	// 绘制状态
 	enum class RenderState : uint32_t
 	{
-		// 默认
+		// 默认scissorTest
 		None = 1 << 0,
 		// 开启面剔除
 		EnableFaceCulling = 1 << 1,
@@ -99,6 +107,8 @@ namespace sz_gui
 		EnableDepthTest = 1 << 3,
 		// 开启混合
 		EnableBlend = 1 << 4,
+		// 开启剪裁设置
+		EnableScissorSet = 1 << 5,
 	};
 
 	USING_BITMASK_OPERATORS()
@@ -150,6 +160,8 @@ namespace sz_gui
 		DepthTest m_depthTest;
 		// 混合参数
 		Blend m_blend;
+		// 裁剪测试参数
+		ScissorTest m_scissorTest;
 		// 顶点数据索引数量
 		size_t m_indexCount = 0;
 	};
@@ -174,6 +186,8 @@ namespace sz_gui
 		virtual void AppendDrawData(const std::vector<float>& positions, const std::vector<float>& colorOrUVs, 
 			const std::vector<uint32_t>& indices, 
 			DrawCommand cmd) = 0;
+		// 额外加入绘制指令
+		virtual void ExtraAppendDrawCommand(DrawCommand cmd) = 0;
 		// 绘制
 		virtual void Render() = 0;
 		// 窗口大小改变事件

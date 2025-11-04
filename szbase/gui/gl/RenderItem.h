@@ -55,6 +55,14 @@ namespace sz_gui
 			GLenum m_frontFace{ GL_CCW };
 			// 剔除正面还是背面
 			GLenum m_cullFace{ GL_BACK };
+
+			// 剪裁测试相关
+			// 是否开启剪裁设置
+			bool m_scissorSet{ false };
+			// 是否开启剪裁测试
+			bool m_scissorTest{ false };
+			int32_t m_scissorX, m_scissorY;
+			int32_t m_scissorW, m_scissorH;
 		};
 	}
 }

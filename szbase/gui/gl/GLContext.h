@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <stack>
 
 #include "../IRender.h"
 #include "Shader.h"
@@ -43,6 +44,8 @@ namespace sz_gui
             void AppendDrawData(const std::vector<float>& positions,
                 const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
                 DrawCommand cmd) override;
+            // 额外加入绘制指令
+            void ExtraAppendDrawCommand(DrawCommand cmd) override;
             // 渲染
             void Render() override;
             // 窗口大小改变事件
@@ -74,6 +77,8 @@ namespace sz_gui
             void setDepthState(const std::unique_ptr<RenderItem>& ri);
             // 设置混合状态
             void setBlendState(const std::unique_ptr<RenderItem>& ri);
+            // 设置裁剪测试状态
+            void setScissorState(const std::unique_ptr<RenderItem>& ri);
             // 准备摄像机
             void prepareCamera(int width, int height)
             {
@@ -105,6 +110,8 @@ namespace sz_gui
             // 透明绘制对象
             RenderItemIdUnmap m_transparentUnmap;
             RenderItemLiist m_transparentItems;
+            // 裁剪测试栈
+            std::stack<bool> m_scissorStack;
         };
     }
 }

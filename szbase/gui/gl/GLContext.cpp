@@ -178,6 +178,15 @@ namespace sz_gui
                 ri->m_dFactor = getBlendDFactor(cmd.m_blend.m_dstBlendFunc);
                 ri->m_opacity = cmd.m_blend.m_opacity;
             }
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorSet))
+            {
+                ri->m_scissorSet = true;
+                ri->m_scissorTest = cmd.m_scissorTest.m_scissorTest;
+                ri->m_scissorX = cmd.m_scissorTest.m_x;
+                ri->m_scissorY = cmd.m_scissorTest.m_y;
+				ri->m_scissorW = cmd.m_scissorTest.m_width;
+				ri->m_scissorH = cmd.m_scissorTest.m_height;
+            }
 
             if (oldOpcacity || oldTransparent)
             {
@@ -193,6 +202,45 @@ namespace sz_gui
 
             m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
 			m_opacityUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
+        }
+
+        void GLContext::ExtraAppendDrawCommand(DrawCommand cmd)
+        {
+            assert(cmd.m_onlyId);
+
+            RenderItem* ri = nullptr;
+            bool oldOpcacity = false;
+            bool oldTransparent = false;
+            auto oIt = m_opacityUnmap.find(cmd.m_onlyId);
+            auto tIt = m_transparentUnmap.find(cmd.m_onlyId);
+            if (oIt == m_opacityUnmap.end() && tIt == m_transparentUnmap.end())
+            {
+                return;
+            }
+            else if (oIt == m_opacityUnmap.end())
+            {
+                oldTransparent = true;
+                ri = tIt->second->get();
+            }
+            else
+            {
+                oldOpcacity = true;
+                ri = oIt->second->get();
+            }
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorSet))
+            {
+                ri->m_scissorSet = true;
+                ri->m_scissorTest = cmd.m_scissorTest.m_scissorTest;
+                ri->m_scissorX = cmd.m_scissorTest.m_x;
+                ri->m_scissorY = cmd.m_scissorTest.m_y;
+                ri->m_scissorW = cmd.m_scissorTest.m_width;
+                ri->m_scissorH = cmd.m_scissorTest.m_height;
+            }
+            else
+            {
+                ri->m_scissorSet = false;
+            }
         }
 
         void GLContext::uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
@@ -240,6 +288,8 @@ namespace sz_gui
 
         void GLContext::Render()
         {
+            assert(m_scissorStack.empty());
+
             // 设置当前帧，绘制的时候，opengl的必要状态机参数
             // 默认开启面剔除
             GL_CALL(glEnable(GL_CULL_FACE));
@@ -335,6 +385,9 @@ namespace sz_gui
             GL_CALL(glBindVertexArray(ri->m_geo->GetVao()));
             // 绘制
             GL_CALL(glDrawElements(ri->m_drawMode, (GLsizei)ri->m_geo->GetIndicesCount(), GL_UNSIGNED_INT, 0));
+
+            // 设置剪裁状态
+            setScissorState(ri);
         }
 
         std::unique_ptr<Shader>& GLContext::pickShader(MaterialType type)
@@ -430,6 +483,28 @@ namespace sz_gui
             {
                 GL_CALL(glDisable(GL_BLEND));
             }
+        }
+
+        void GLContext::setScissorState(const std::unique_ptr<RenderItem>& ri)
+        {
+            if (!ri->m_scissorSet)
+            {
+                return;
+            }
+
+            if (ri->m_scissorTest)
+			{
+                m_scissorStack.push(true);
+
+				GL_CALL(glEnable(GL_SCISSOR_TEST));
+                GL_CALL(glScissor(ri->m_scissorX, ri->m_scissorY, ri->m_scissorW, ri->m_scissorH));
+			}
+			else
+			{
+                m_scissorStack.pop();
+
+				GL_CALL(glDisable(GL_SCISSOR_TEST));
+			}
         }
     }
 }

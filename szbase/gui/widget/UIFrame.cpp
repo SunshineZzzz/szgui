@@ -81,16 +81,31 @@ namespace sz_gui
 			dCmd.m_worldPos = { m_x, m_y, m_z };
 			dCmd.m_uploadOp = getUploadOp();
 			dCmd.m_drawMode = DrawMode::LINE_LOOP;
+			dCmd.m_renderState |= RenderState::EnableScissorSet;
+			dCmd.m_scissorTest = {true, int32_t(m_x + m_borderWidth), int32_t(m_y + m_borderWidth),
+				int32_t(m_width - 2 * m_borderWidth), int32_t(m_height - 2 * m_borderWidth) };
 			dCmd.m_materialType = MaterialType::ColorMaterial;
 
 			auto& render = m_uiManager.lock()->GetRender();
 			render->AppendDrawData(positions, colors, indices, dCmd);
 
 			// 递归收集子节点的渲染数据
-			//for (auto& child : m_childMultimap)
-			//{
-			//	child.second->OnCollectRenderData();
-			//}
+			for (auto& child : m_childMultimap)
+			{
+				child.second->OnCollectRenderData();
+			}
+
+			DrawCommand dExtraCmd;
+			dExtraCmd.m_onlyId = m_childIdForUIManager;
+			dExtraCmd.m_renderState = RenderState::None;
+			if (!m_childMultimap.empty())
+			{
+				dExtraCmd.m_renderState = RenderState::EnableScissorSet;
+				dExtraCmd.m_scissorTest = { false };
+				dExtraCmd.m_onlyId = 
+					std::prev(m_childMultimap.end())->second->GetChildIdForUIManager();
+			}
+			render->ExtraAppendDrawCommand(dExtraCmd);
 		}
 	}
 }
