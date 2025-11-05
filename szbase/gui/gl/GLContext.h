@@ -54,6 +54,8 @@ namespace sz_gui
                 GL_CALL(glViewport(0, 0, width, height));
                 prepareCamera(width, height);
             }
+            // 设置颜色主题
+            void SetColorTheme(ColorTheme theme) override;
 
         private:
             // 上传数据到GPU
@@ -112,6 +114,8 @@ namespace sz_gui
             RenderItemLiist m_transparentItems;
             // 裁剪测试栈
             std::stack<bool> m_scissorStack;
+            // 颜色主题
+            ColorTheme m_colorTheme = ColorTheme::LightMode;
         };
     }
 }

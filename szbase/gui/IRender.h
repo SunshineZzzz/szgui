@@ -125,6 +125,8 @@ namespace sz_gui
 		None,
 		// 连续绘制线段，并自动连接首尾
 		LINE_LOOP,
+		// 三角形
+		TRIANGLES,
 	};
 
 	// 材质类型
@@ -192,5 +194,7 @@ namespace sz_gui
 		virtual void Render() = 0;
 		// 窗口大小改变事件
 		virtual void OnWindowResize(int,int) = 0;
+		// 设置颜色主题
+		virtual void SetColorTheme(ColorTheme) = 0;
 	};
 }

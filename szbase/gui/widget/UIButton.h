@@ -19,11 +19,9 @@ namespace sz_gui
             // 正常状态
             normal,
             // 鼠标悬停状态，高亮
-            highlight,
+            hover,
             // 按下状态
             press,
-
-            count,
         };
 
         // 文本对齐方式
@@ -58,13 +56,26 @@ namespace sz_gui
             // 鼠标点击事件，返回false将会阻止冒泡
             bool OnMouseButton(const events::MouseButtonEventData& data) override;
             // 收集渲染数据事件
-            void OnCollectRenderData() override;
+            bool OnCollectRenderData() override;
+            // 设置颜色主题
+            void SetColorTheme(ColorTheme theme) override;
 
         protected:
+            // 按钮颜色
+            std::vector<float> m_colors =
+            {
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+				1.0f, 1.0f, 1.0f,
+
+				1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+				1.0f, 1.0f, 1.0f,
+            };
             // 按钮文本
             std::string m_text;
             // 当前按钮状态 
-            ButtonState m_status = ButtonState::normal;
+            ButtonState m_state = ButtonState::normal;
             // 按钮文本对其方式
             ButtonTextAlign m_Textlign = ButtonTextAlign::h_center|ButtonTextAlign::v_center;
         };

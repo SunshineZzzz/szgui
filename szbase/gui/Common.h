@@ -40,4 +40,11 @@ namespace sz_gui
 	using AllUIMultimap = std::multimap<std::pair<uint64_t, float>,
 		std::shared_ptr<IUIBase>, UIKeyCompareAscending>;
 	using AllChildUnorderedmap = std::unordered_map<uint64_t, AllUIMultimap::iterator>;
+
+	// 颜色主题
+	enum class ColorTheme
+	{
+		// Light Mode
+		LightMode,
+	};
 }

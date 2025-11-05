@@ -15,6 +15,8 @@ namespace sz_gui
 			m_width = (float)desiredW;
 			m_height = (float)desiredH;
 			m_z = desiredZ;
+
+			SetColorTheme(ColorTheme::LightMode);
 		}
 
 		bool UIButton::OnMouseButton(const events::MouseButtonEventData& data)
@@ -23,9 +25,118 @@ namespace sz_gui
 			return false;
 		}
 
-		void UIButton::OnCollectRenderData()
+		bool UIButton::OnCollectRenderData()
 		{
+			if (!IsVisible())
+			{
+				return false;
+			}
 
+			auto aabb = getIntersectWithParent();
+			if (aabb.IsNull())
+			{
+				return false;
+			}
+
+			// 顶点位置信息索引
+			static std::vector<float> positions =
+			{
+				// 左上角
+				0.0f, 0.0f, 0.0f,
+				// 右上角
+				m_width, 0.0f, 0.0f,
+				// 右下角
+				m_width, m_height, 0.0f,
+				// 左下角
+				0.0f, m_height, 0.0f,
+			};
+			// 顶点颜色信息
+			const std::vector<float>& colors = m_colors;
+			// 顶点数据索引
+			static std::vector<uint32_t> indices = 
+			{
+				0, 1, 2, 
+				2, 3 ,0, 
+			};
+
+			// 绘制命令
+			DrawCommand dCmd;
+			dCmd.m_onlyId = m_childIdForUIManager;
+			dCmd.m_worldPos = { m_x, m_y, m_z };
+			dCmd.m_uploadOp = getUploadOp();
+			dCmd.m_drawMode = DrawMode::TRIANGLES;
+
+			auto& render = m_uiManager.lock()->GetRender();
+			render->AppendDrawData(positions, colors, indices, dCmd);
+
+			return true;
+		}
+
+		void UIButton::SetColorTheme(ColorTheme theme)
+		{
+			UIBase::SetColorTheme(theme);
+			
+			if (m_state == ButtonState::disable)
+			{
+				switch (theme)
+				{
+				case ColorTheme::LightMode:
+				m_colors =
+				{
+					0.98f, 0.98f, 0.98f,
+					0.98f, 0.98f, 0.98f,
+					0.98f, 0.98f, 0.98f,
+					0.98f, 0.98f, 0.98f,
+				};
+				break;
+				}
+			}
+			else if (m_state == ButtonState::normal)
+			{
+				switch (theme)
+				{
+				case ColorTheme::LightMode:
+				m_colors =
+				{
+					0.97f, 0.97f, 0.97f,
+					0.97f, 0.97f, 0.97f,
+					0.97f, 0.97f, 0.97f,
+					0.97f, 0.97f, 0.97f,
+				};
+				break;
+				}
+			}
+			else if (m_state == ButtonState::hover)
+			{
+				switch (theme)
+				{
+				case ColorTheme::LightMode:
+				m_colors =
+				{
+					0.93f, 0.93f, 0.93f,
+					0.93f, 0.93f, 0.93f,
+					0.93f, 0.93f, 0.93f,
+					0.93f, 0.93f, 0.93f,
+				};
+				break;
+				}
+			}
+			else
+			{
+				// press
+				switch (theme)
+				{
+				case ColorTheme::LightMode:
+				m_colors =
+				{
+					0.85f, 0.85f, 0.85f,
+					0.85f, 0.85f, 0.85f,
+					0.85f, 0.85f, 0.85f,
+					0.85f, 0.85f, 0.85f,
+				};
+				break;
+				}
+			}
 		}
 	}
 }

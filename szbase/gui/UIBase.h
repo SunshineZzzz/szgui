@@ -85,11 +85,11 @@ namespace sz_gui
 		// 窗户发生变化事件
 		void OnWindowResize() override 
 		{ 
-			m_uploadOp |= UploadOperation::UploadPos; 
+			setUploadOp(UploadOperation::UploadPos);
 			return; 
 		};
 		// 收集渲染数据事件
-		void OnCollectRenderData() override { return; };
+		bool OnCollectRenderData() override { return false; };
 		// 获取名称
 		const std::string& GetName() override 
 		{ 
@@ -103,8 +103,19 @@ namespace sz_gui
 		void SetUIFlag(UIFlag flag) override  { m_flag |= flag; }
 		// 是否有UI标记
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
+		// 是否可见
+		virtual bool IsVisible() const override
+		{
+			return  HasUIFlag(UIFlag::Visibale);
+		}
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;
+		// 设置颜色主题
+		void SetColorTheme(ColorTheme theme) override
+		{
+			m_colorTheme = theme;
+			setUploadOp(UploadOperation::UploadColorOrUv);
+		}
 
 	protected:
 		// 获取上传操作
@@ -113,6 +124,12 @@ namespace sz_gui
 			auto op = m_uploadOp;
 			m_uploadOp = UploadOperation::Retain;
 			return op;
+		}
+		// 设置上传操作
+		void setUploadOp(UploadOperation op) 
+		{ 
+			m_uploadOp &= ~UploadOperation::Retain;
+			m_uploadOp |= op;
 		}
 
 	protected:
@@ -155,5 +172,7 @@ namespace sz_gui
 		// 上传操作
 		UploadOperation m_uploadOp = UploadOperation::UploadColorOrUv | 
 			UploadOperation::UploadPos | UploadOperation::UploadIndex;
+		// 颜色主题
+		ColorTheme m_colorTheme = ColorTheme::LightMode;
 	};
 }

@@ -39,18 +39,29 @@ namespace sz_gui
                 return m_layout->DelWidget(widget);
             }
 
+
         public:
             // 鼠标点击事件，返回false将会阻止冒泡
             bool OnMouseButton(const events::MouseButtonEventData& data) override;
             // 窗户大小改变事件
             void OnWindowResize() override;
             // 收集渲染数据事件
-            void OnCollectRenderData() override;
+            bool OnCollectRenderData() override;
+            // 设置颜色主题
+            void SetColorTheme(ColorTheme theme) override;
 
         private:
             // 布局
             std::unique_ptr<ILayout> m_layout;
             static constexpr float m_borderWidth = 1.0f;
+            // 顶点颜色信息
+            std::vector<float> m_colors =
+            {
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+                1.0f, 1.0f, 1.0f,
+            };
         };
     }
 }

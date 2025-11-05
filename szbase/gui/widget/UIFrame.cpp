@@ -19,7 +19,9 @@ namespace sz_gui
 			m_margins = std::move(margins);
 			m_desireWidth = (float)desiredW;
 			m_desireHeight = (float)desiredH;
-			m_z = -desiredZ;
+			m_z = desiredZ;
+
+			SetColorTheme(ColorTheme::LightMode);
 		}
 
 		bool UIFrame::OnMouseButton(const events::MouseButtonEventData& data)
@@ -38,12 +40,17 @@ namespace sz_gui
 			m_layout->PerformLayout();
 		}
 
-		void UIFrame::OnCollectRenderData()
+		bool UIFrame::OnCollectRenderData()
 		{
+			if (!IsVisible())
+			{
+				return false;
+			}
+
 			auto aabb = getIntersectWithParent();
 			if (aabb.IsNull())
 			{
-				return;
+				return false;
 			}
 
 			if (!m_parent.expired() && aabb.GetRect() != GetRect()) [[unlikely]]
@@ -53,7 +60,7 @@ namespace sz_gui
 			}
 
 			// 顶点位置信息索引
-			std::vector<float> positions =
+			static std::vector<float> positions =
 			{
 				// 左上角
 				0.0f, 0.0f, 0.0f,
@@ -65,15 +72,9 @@ namespace sz_gui
 				0.0f, m_height, 0.0f,
 			};
 			// 顶点颜色信息
-			std::vector<float> colors = 
-			{
-				1.0f, 1.0f, 1.0f,
-				1.0f, 1.0f, 1.0f,
-				1.0f, 1.0f, 1.0f,
-				1.0f, 1.0f, 1.0f,
-			};
+			const std::vector<float>& colors = m_colors;
 			// 顶点数据索引
-			std::vector<uint32_t> indices = { 0, 1, 2, 3 };
+			static std::vector<uint32_t> indices = { 0, 1, 2, 3 };
 
 			// 绘制命令
 			DrawCommand dCmd;
@@ -84,21 +85,24 @@ namespace sz_gui
 			dCmd.m_renderState |= RenderState::EnableScissorSet;
 			dCmd.m_scissorTest = {true, int32_t(m_x + m_borderWidth), int32_t(m_y + m_borderWidth),
 				int32_t(m_width - 2 * m_borderWidth), int32_t(m_height - 2 * m_borderWidth) };
-			dCmd.m_materialType = MaterialType::ColorMaterial;
 
 			auto& render = m_uiManager.lock()->GetRender();
 			render->AppendDrawData(positions, colors, indices, dCmd);
 
+			static bool isChildAppend = false;
 			// 递归收集子节点的渲染数据
-			for (auto& child : m_childMultimap)
-			{
-				child.second->OnCollectRenderData();
-			}
+			//for (auto& child : m_childMultimap)
+			//{
+			//	if (child.second->OnCollectRenderData())
+			//	{
+			//		isChildAppend = true;
+			//	}
+			//}
 
 			DrawCommand dExtraCmd;
 			dExtraCmd.m_onlyId = m_childIdForUIManager;
 			dExtraCmd.m_renderState = RenderState::None;
-			if (!m_childMultimap.empty())
+			if (/*!m_childMultimap.empty() ||*/ isChildAppend)
 			{
 				dExtraCmd.m_renderState = RenderState::EnableScissorSet;
 				dExtraCmd.m_scissorTest = { false };
@@ -106,6 +110,26 @@ namespace sz_gui
 					std::prev(m_childMultimap.end())->second->GetChildIdForUIManager();
 			}
 			render->ExtraAppendDrawCommand(dExtraCmd);
+
+			return true;
+		}
+
+		void UIFrame::SetColorTheme(ColorTheme theme)
+		{
+			UIBase::SetColorTheme(theme);
+
+			switch (theme)
+			{
+			case ColorTheme::LightMode:
+			m_colors =
+			{
+				0.85f, 0.85f, 0.85f,
+				0.85f, 0.85f, 0.85f,
+				0.85f, 0.85f, 0.85f,
+				0.85f, 0.85f, 0.85f,
+			};
+			break;
+			}
 		}
 	}
 }

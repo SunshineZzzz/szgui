@@ -104,6 +104,8 @@ namespace sz_gui
 		virtual void SetUIFlag(UIFlag) = 0;
 		// 是否有UI标记
 		virtual bool HasUIFlag(UIFlag) const = 0;
+		// 是否可见
+		virtual bool IsVisible() const = 0;
 		// 获取当前UI和父UI的AABB2D交集
 		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
 		// 鼠标点击事件，返回false将会阻止冒泡
@@ -111,6 +113,8 @@ namespace sz_gui
 		// 窗户发生变化事件
 		virtual void OnWindowResize() = 0;
 		// 收集渲染数据事件
-		virtual void OnCollectRenderData() = 0;
+		virtual bool OnCollectRenderData() = 0;
+		// 设置颜色主题
+		virtual void SetColorTheme(ColorTheme) = 0;
 	};
 }

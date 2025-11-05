@@ -97,8 +97,8 @@ namespace sz_gui
 				return { err, false };
 			}
 
-            GL_CALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-            
+            SetColorTheme(m_colorTheme);
+
             OnWindowResize(width, height);
 
             return { std::move(errMsg), true };
@@ -342,12 +342,26 @@ namespace sz_gui
             SDL_GL_SwapWindow(m_window);
         }
 
+        void GLContext::SetColorTheme(ColorTheme theme) 
+        {
+            m_colorTheme = theme;
+
+            switch (theme)
+            {
+            case ColorTheme::LightMode:
+                GL_CALL(glClearColor(0.97f, 0.97f, 0.97f, 1.0f));
+                break;
+            }
+        }
+
         GLenum GLContext::getDrawMode(DrawMode mode)
         {
             switch (mode)
             {
             case DrawMode::LINE_LOOP:
                 return GL_LINE_LOOP;
+            case DrawMode::TRIANGLES:
+                return GL_TRIANGLES;
             default:
                 assert(0);
             }
