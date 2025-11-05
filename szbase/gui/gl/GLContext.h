@@ -84,8 +84,8 @@ namespace sz_gui
             // 准备摄像机
             void prepareCamera(int width, int height)
             {
-                m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), float(height), 
-                    0.0f, 0.0f, 1000.f);
+                m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), 0.0f,
+                    float(height), 0.0f, 1000.f);
             }
 
         private:

@@ -10,7 +10,7 @@ namespace sz_gui
 	namespace widget
 	{
 		UIFrame::UIFrame(std::string name, layout::AnchorPoint type, layout::Margins margins, 
-			uint32_t desiredW, uint32_t desiredH, float desiredZ)
+			uint32_t desiredW, uint32_t desiredH)
 		{
 			m_type = UIType::Frame;
 
@@ -19,7 +19,6 @@ namespace sz_gui
 			m_margins = std::move(margins);
 			m_desireWidth = (float)desiredW;
 			m_desireHeight = (float)desiredH;
-			m_z = desiredZ;
 
 			SetColorTheme(ColorTheme::LightMode);
 		}
@@ -60,7 +59,9 @@ namespace sz_gui
 			}
 
 			// 顶点位置信息索引
-			static std::vector<float> positions =
+			static std::vector<float> positions;
+			positions.clear();
+			positions =
 			{
 				// 左上角
 				0.0f, 0.0f, 0.0f,
@@ -91,18 +92,18 @@ namespace sz_gui
 
 			static bool isChildAppend = false;
 			// 递归收集子节点的渲染数据
-			//for (auto& child : m_childMultimap)
-			//{
-			//	if (child.second->OnCollectRenderData())
-			//	{
-			//		isChildAppend = true;
-			//	}
-			//}
+			for (auto& child : m_childMultimap)
+			{
+				if (child.second->OnCollectRenderData())
+				{
+					isChildAppend = true;
+				}
+			}
 
 			DrawCommand dExtraCmd;
 			dExtraCmd.m_onlyId = m_childIdForUIManager;
 			dExtraCmd.m_renderState = RenderState::None;
-			if (/*!m_childMultimap.empty() ||*/ isChildAppend)
+			if (!m_childMultimap.empty() || isChildAppend)
 			{
 				dExtraCmd.m_renderState = RenderState::EnableScissorSet;
 				dExtraCmd.m_scissorTest = { false };

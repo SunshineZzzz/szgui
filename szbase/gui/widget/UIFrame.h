@@ -16,7 +16,7 @@ namespace sz_gui
         public:
             // 锚点布局构造
             UIFrame(std::string name, layout::AnchorPoint type, layout::Margins margins, 
-                uint32_t desiredW, uint32_t desiredH, float desireZ);
+                uint32_t desiredW, uint32_t desiredH);
 
             // 设置布局
             void SetLayout(ILayout* layout) { m_layout.reset(layout); };

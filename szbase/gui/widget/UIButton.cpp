@@ -5,16 +5,15 @@ namespace sz_gui
 	namespace widget
 	{
 		UIButton::UIButton(std::string name, layout::AnchorPoint type, layout::Margins margins, 
-			uint32_t desiredW, uint32_t desiredH, float desiredZ)
+			uint32_t desiredW, uint32_t desiredH)
 		{
 			m_type = UIType::Button;
 
 			m_name = std::move(name);
 			m_anchorPoint = type;
 			m_margins = std::move(margins);
-			m_width = (float)desiredW;
-			m_height = (float)desiredH;
-			m_z = desiredZ;
+			m_desireWidth = (float)desiredW;
+			m_desireHeight = (float)desiredH;
 
 			SetColorTheme(ColorTheme::LightMode);
 		}
@@ -39,7 +38,9 @@ namespace sz_gui
 			}
 
 			// 顶点位置信息索引
-			static std::vector<float> positions =
+			static std::vector<float> positions;
+			positions.clear();
+			positions =
 			{
 				// 左上角
 				0.0f, 0.0f, 0.0f,
@@ -72,71 +73,72 @@ namespace sz_gui
 			return true;
 		}
 
-		void UIButton::SetColorTheme(ColorTheme theme)
-		{
-			UIBase::SetColorTheme(theme);
-			
-			if (m_state == ButtonState::disable)
-			{
-				switch (theme)
-				{
-				case ColorTheme::LightMode:
-				m_colors =
-				{
-					0.98f, 0.98f, 0.98f,
-					0.98f, 0.98f, 0.98f,
-					0.98f, 0.98f, 0.98f,
-					0.98f, 0.98f, 0.98f,
-				};
-				break;
-				}
-			}
-			else if (m_state == ButtonState::normal)
-			{
-				switch (theme)
-				{
-				case ColorTheme::LightMode:
-				m_colors =
-				{
-					0.97f, 0.97f, 0.97f,
-					0.97f, 0.97f, 0.97f,
-					0.97f, 0.97f, 0.97f,
-					0.97f, 0.97f, 0.97f,
-				};
-				break;
-				}
-			}
-			else if (m_state == ButtonState::hover)
-			{
-				switch (theme)
-				{
-				case ColorTheme::LightMode:
-				m_colors =
-				{
-					0.93f, 0.93f, 0.93f,
-					0.93f, 0.93f, 0.93f,
-					0.93f, 0.93f, 0.93f,
-					0.93f, 0.93f, 0.93f,
-				};
-				break;
-				}
-			}
-			else
-			{
-				// press
-				switch (theme)
-				{
-				case ColorTheme::LightMode:
-				m_colors =
-				{
-					0.85f, 0.85f, 0.85f,
-					0.85f, 0.85f, 0.85f,
-					0.85f, 0.85f, 0.85f,
-					0.85f, 0.85f, 0.85f,
-				};
-				break;
-				}
-			}
-		}
+        void UIButton::SetColorTheme(ColorTheme theme)
+        {
+            UIBase::SetColorTheme(theme);
+
+            // 默认蓝
+            const float R_NORM = 0.25f; const float G_NORM = 0.60f; const float B_NORM = 0.90f;
+            // 亮蓝 (悬停)
+            const float R_HOV = 0.30f; const float G_HOV = 0.65f; const float B_HOV = 0.95f;
+            // 暗蓝 (按下)
+            const float R_PRS = 0.20f; const float G_PRS = 0.55f; const float B_PRS = 0.85f;
+            // 褪色蓝 (禁用)
+            const float R_DIS = 0.60f; const float G_DIS = 0.80f; const float B_DIS = 0.95f;
+
+            if (m_state == ButtonState::disable)
+            {
+                switch (theme)
+                {
+                case ColorTheme::LightMode:
+                    m_colors =
+                    {
+                        R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
+                        R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
+                    };
+                    break;
+                }
+            }
+            else if (m_state == ButtonState::normal)
+            {
+                switch (theme)
+                {
+                case ColorTheme::LightMode:
+                    m_colors =
+                    {
+                        R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
+                        R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
+                    };
+                    break;
+                }
+            }
+            else if (m_state == ButtonState::hover)
+            {
+                switch (theme)
+                {
+                case ColorTheme::LightMode:
+                    m_colors =
+                    {
+                        R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
+                        R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
+                    };
+                    break;
+                }
+            }
+            else 
+            {
+                // press
+                switch (theme)
+                {
+                case ColorTheme::LightMode:
+                    m_colors =
+                    {
+                        R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
+                        R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
+                    };
+                    break;
+                }
+            }
+        }
 	}
 }

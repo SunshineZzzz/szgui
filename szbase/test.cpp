@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
     auto frame = std::make_shared<sz_gui::widget::UIFrame>("Center",
         sz_gui::layout::AnchorPoint::Center,
         sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 5.0f, 5.0f),
-        0, 0, -2.0f);
+        0, 0);
     app.RegToUI(frame);
     app.LayoutAddWidget(frame);
     frame->SetUIFlag(sz_gui::UIFlag::Top);
@@ -181,31 +181,37 @@ int main(int argc, char* argv[])
 
     auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
         sz_gui::layout::AnchorPoint::TopLeft,
-        sz_gui::layout::Margins::Percentage(25.0f, 25.0f, 0.0f, 0.0f),
-        20, 10, -1.0f);
+        sz_gui::layout::Margins::Percentage(5.0f, 5.0f, 0.0f, 0.0f),
+        80, 40);
     btn1->SetParent(frame);
     frame->AddWidget(btn1);
 
     auto btn2 = std::make_shared<sz_gui::widget::UIButton>("TopRight",
         sz_gui::layout::AnchorPoint::TopRight,
-        sz_gui::layout::Margins::Percentage(0.0f, 0.0f, 25.0f, 25.0f),
-        20, 10, -1.0f);
+        sz_gui::layout::Margins::Percentage(0.0f, 5.0f, 5.0f, 0.0f),
+        80, 40);
     btn2->SetParent(frame);
     frame->AddWidget(btn2);
 
     auto btn3 = std::make_shared<sz_gui::widget::UIButton>("Center",
         sz_gui::layout::AnchorPoint::Center, sz_gui::layout::Margins(0.0f),
-        20, 10, -1.0f);
+        80, 40);
     btn3->SetParent(frame);
     frame->AddWidget(btn3);
 
     auto btn4 = std::make_shared<sz_gui::widget::UIButton>("BottomLeft",
         sz_gui::layout::AnchorPoint::BottomLeft,
-        sz_gui::layout::Margins::Percentage(25.0f, 0.0f, 0.0f, 25.0f),
-        20, 10, -1.0f);
+        sz_gui::layout::Margins::Percentage(5.0f, 0.0f, 0.0f, 5.0f),
+        80, 40);
     btn4->SetParent(frame);
     frame->AddWidget(btn4);
 
+    auto btn5 = std::make_shared<sz_gui::widget::UIButton>("BottomRight",
+        sz_gui::layout::AnchorPoint::BottomRight,
+        sz_gui::layout::Margins::Percentage(0.0f, 0.0f, 5.0f, 5.0f),
+        80, 40);
+    btn5->SetParent(frame);
+    frame->AddWidget(btn5);
 
     app.Run();
 

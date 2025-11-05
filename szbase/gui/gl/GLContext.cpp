@@ -166,10 +166,6 @@ namespace sz_gui
                 ri->m_depthTest = true;
                 ri->m_depthFunc = getDepthFunc(cmd.m_depthTest.m_depthFunc);
                 ri->m_depthWrite = cmd.m_depthTest.m_depthWrite;
-                if (ri->m_blend)
-                {
-                    ri->m_depthWrite = false;
-                }
             }
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend))
             {
@@ -293,12 +289,12 @@ namespace sz_gui
             // 设置当前帧，绘制的时候，opengl的必要状态机参数
             // 默认开启面剔除
             GL_CALL(glEnable(GL_CULL_FACE));
-            GL_CALL(glFrontFace(GL_CCW));
+            GL_CALL(glFrontFace(GL_CW));
             GL_CALL(glCullFace(GL_BACK));
             
             // 默认开启深度测试
             GL_CALL(glEnable(GL_DEPTH_TEST));
-            GL_CALL(glDepthFunc(GL_LESS));
+            GL_CALL(glDepthFunc(GL_LEQUAL));
             GL_CALL(glDepthMask(GL_TRUE));
 
             // 默认关闭颜色混合
@@ -443,6 +439,8 @@ namespace sz_gui
 			{
             case DepthFuncType::Less:
 				return GL_LESS;
+            case DepthFuncType::Lequal:
+                return GL_LEQUAL;
             case DepthFuncType::Greater:
                 return GL_GREATER;
 			default:

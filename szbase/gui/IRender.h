@@ -32,7 +32,7 @@ namespace sz_gui
 	struct FaceCulling
 	{
 		// 正面
-		FrontFaceType m_frontFace = FrontFaceType::CCW;
+		FrontFaceType m_frontFace = FrontFaceType::CW;
 		// 剔除正面还是背面
 		CullFaceType m_cullFace = CullFaceType::Back;
 	};
@@ -42,6 +42,8 @@ namespace sz_gui
 	{
 		// 小于
 		Less,
+		// 小于等于
+		Lequal,
 		// 大于
 		Greater,
 	};
@@ -49,7 +51,7 @@ namespace sz_gui
 	struct DepthTest
 	{
 		// 深度测试函数
-		DepthFuncType m_depthFunc = DepthFuncType::Less;
+		DepthFuncType m_depthFunc = DepthFuncType::Lequal;
 		// 是否写入深度值
 		bool m_depthWrite{ true };
 	};

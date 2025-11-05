@@ -50,7 +50,7 @@ namespace sz_gui
         public:
             // 锚点布局构造
             UIButton(std::string name, layout::AnchorPoint type, layout::Margins margins, 
-                uint32_t desiredW, uint32_t desiredH, float desiredZ);
+                uint32_t desiredW, uint32_t desiredH);
 
         public:
             // 鼠标点击事件，返回false将会阻止冒泡
@@ -64,13 +64,13 @@ namespace sz_gui
             // 按钮颜色
             std::vector<float> m_colors =
             {
-                1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,
-				1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
 
-				1.0f, 1.0f, 1.0f,
-                1.0f, 1.0f, 1.0f,
-				1.0f, 1.0f, 1.0f,
+                0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f,
             };
             // 按钮文本
             std::string m_text;
