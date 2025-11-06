@@ -36,7 +36,7 @@ namespace sz_gui
 			MaterialType m_type;
 			// 深度检测相关
 			bool m_depthTest{ true };
-			GLenum m_depthFunc{ GL_LESS };
+			GLenum m_depthFunc{ GL_LEQUAL };
 			bool m_depthWrite{ true };
 
 			// 颜色混合相关

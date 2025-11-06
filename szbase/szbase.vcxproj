@@ -530,6 +530,7 @@
     <ClInclude Include="gui\gl\ShaderDefine.h" />
     <ClInclude Include="gui\gl\Texture.h" />
     <ClInclude Include="gui\ILayout.h" />
+    <ClInclude Include="gui\InputControl.h" />
     <ClInclude Include="gui\IRender.h" />
     <ClInclude Include="gui\IUIBase.h" />
     <ClInclude Include="gui\IUIManager.h" />
@@ -539,6 +540,7 @@
     <ClInclude Include="gui\UIManager.h" />
     <ClInclude Include="gui\widget\UIButton.h" />
     <ClInclude Include="gui\widget\UIFrame.h" />
+    <ClInclude Include="macro\Macro.h" />
     <ClInclude Include="test\TestFramework.h" />
     <ClInclude Include="time\Timestamp.h" />
     <ClInclude Include="utils\BitwiseEnum.h" />
@@ -552,6 +554,7 @@
     <ClCompile Include="gui\gl\OrthographicCamera.cpp" />
     <ClCompile Include="gui\gl\Shader.cpp" />
     <ClCompile Include="gui\gl\Texture.cpp" />
+    <ClCompile Include="gui\InputControl.cpp" />
     <ClCompile Include="gui\layout\AnchorLayout.cpp" />
     <ClCompile Include="gui\SDLApp.cpp" />
     <ClCompile Include="gui\UIBase.cpp" />

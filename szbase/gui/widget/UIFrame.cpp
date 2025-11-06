@@ -23,9 +23,8 @@ namespace sz_gui
 			SetColorTheme(ColorTheme::LightMode);
 		}
 
-		bool UIFrame::OnMouseButton(const events::MouseButtonEventData& data)
+		bool UIFrame::OnMouseLeftButtonClick()
 		{
-			// m_eventbus.Publish<events::MouseButtonEvent>(data);
 			return false;
 		}
 

@@ -6,6 +6,7 @@
 #include <cstdint>
 
 #include "../UIBase.h"
+#include "../../macro/Macro.h"
 
 namespace sz_gui
 {
@@ -15,31 +16,18 @@ namespace sz_gui
         enum class ButtonState
         {
             // 禁用状态
-            disable,
+            Disable,
             // 正常状态
-            normal,
+            Normal,
             // 鼠标悬停状态，高亮
-            hover,
+            Hover,
             // 按下状态
-            press,
-        };
+            Press,
 
-        // 文本对齐方式
-        enum class ButtonTextAlign : uint32_t
-        {
-            h_left = 1 << 0,
-            h_right = 1 << 1,
-            h_center = 1 << 2,
-            v_top = 1 << 3,
-            v_bottom = 1 << 4,
-            v_center = 1 << 5,
+            Count,
         };
-
-        USING_BITMASK_OPERATORS()
     }
 }
-
-ENABLE_BITMASK_OPERATORS(sz_gui::widget::ButtonTextAlign)
 
 namespace sz_gui 
 {
@@ -53,31 +41,35 @@ namespace sz_gui
                 uint32_t desiredW, uint32_t desiredH);
 
         public:
-            // 鼠标点击事件，返回false将会阻止冒泡
-            bool OnMouseButton(const events::MouseButtonEventData& data) override;
+            // 鼠标左键点击事件，返回false将会阻止冒泡
+            bool OnMouseLeftButtonClick() override;
+            // 鼠标左键按下事件
+            void OnMouseLeftButtonDown() override;
+            // 鼠标左键抬起事件
+            void OnMouseLeftButtonUp() override;
+            // 鼠标移动进入事件
+            void OnMouseMoveEnter() override;
+            // 鼠标移动事件
+            void OnMouseMove() override;
+            // 鼠标移动离开事件
+            void OnMouseMoveLeave() override;
             // 收集渲染数据事件
             bool OnCollectRenderData() override;
             // 设置颜色主题
             void SetColorTheme(ColorTheme theme) override;
 
+        private:
+            void setState(ButtonState state);
+
         protected:
             // 按钮颜色
-            std::vector<float> m_colors =
-            {
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 0.0f,
-            };
+            std::map<ButtonState, std::vector<float>> m_colors;
             // 按钮文本
             std::string m_text;
             // 当前按钮状态 
-            ButtonState m_state = ButtonState::normal;
-            // 按钮文本对其方式
-            ButtonTextAlign m_Textlign = ButtonTextAlign::h_center|ButtonTextAlign::v_center;
+            ButtonState m_state = ButtonState::Normal;
+            // 鼠标左键是否按下
+            bool m_mouseLeftIsDown = false;
         };
     }
 }

@@ -41,8 +41,8 @@ namespace sz_gui
 
 
         public:
-            // 鼠标点击事件，返回false将会阻止冒泡
-            bool OnMouseButton(const events::MouseButtonEventData& data) override;
+            // 鼠标左键点击事件，返回false将会阻止冒泡
+            bool OnMouseLeftButtonClick() override;
             // 窗户大小改变事件
             void OnWindowResize() override;
             // 收集渲染数据事件

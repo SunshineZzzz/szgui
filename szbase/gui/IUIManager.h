@@ -12,6 +12,7 @@ namespace sz_gui
 	class IUIBase;
 	class IRender;
 	class ILayout;
+	class InputControl;
 
 	// UI管理器抽象
 	class IUIManager
@@ -51,5 +52,7 @@ namespace sz_gui
 		virtual bool LayoutDelWidget(std::shared_ptr<IUIBase>) = 0;
 		// 绘制
 		virtual void Render() = 0;
+		// 获取输入控制
+		virtual const InputControl* GetInputControl() const = 0;
 	};
 }

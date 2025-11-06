@@ -1,6 +1,8 @@
 #include "UIManager.h"
 #include "../ds/EventBus.h"
 
+#include <SDL3/SDL.h>
+
 #include <map>
 
 namespace sz_gui
@@ -152,10 +154,12 @@ namespace sz_gui
         {
         case SDL_EVENT_QUIT:
         {
+            // 退出
         }
         break;
         case SDL_EVENT_WINDOW_RESIZED:
         {
+            // 窗口大小改变
             m_width = event->window.data1;
             m_height = event->window.data2;
 
@@ -172,14 +176,23 @@ namespace sz_gui
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
         {
-            if (event->button.button != SDL_BUTTON_LEFT && 
-                event->button.button != SDL_BUTTON_RIGHT &&
-                event->button.button != SDL_BUTTON_MIDDLE)
+            // 鼠标点击
+            if (event->button.button != SDL_BUTTON_LEFT)
             {
                 return false;
             }
-            // 鼠标点击事件
-            bubbleEvent(*event);
+            m_inputControl.OnMouseButton(eventContainer);
+            if (event->button.button == SDL_BUTTON_LEFT)
+            {
+                mouseLeftButtonEvent();
+            } 
+        }
+        break;
+        case SDL_EVENT_MOUSE_MOTION:
+        {
+            // 鼠标移动
+            m_inputControl.OnMouseMotion(eventContainer);
+            mouseMoveEvent();
         }
         break;
         default:
@@ -203,32 +216,21 @@ namespace sz_gui
         m_render->Render();
     }
 
-    bool UIManager::findTargetWriteChainAtPoint(float x, float y, std::vector<std::weak_ptr<IUIBase>>& chain)
+    bool UIManager::findTargetWriteChainAtPoint(const std::shared_ptr<IUIBase>& findChild, 
+        std::vector<std::weak_ptr<IUIBase>>& chain)
     {
         chain.resize(0);
 
-        std::weak_ptr<IUIBase> findChilds;
-        // m_allUIMultimap，倒叙，按照Z值由大到小排序，Z值一样按照创建顺序排序
-        for (auto it = m_allUIMultimap.rbegin(); it != m_allUIMultimap.rend(); ++it)
-		{
-			if (it->second->ContainsPoint(x, y))
-			{
-				// 最近者优先
-				findChilds = it->second;
-				break;
-			}
-		}
-
-        if (findChilds.expired())
+        if (!findChild)
         {
             return false;
         }
-        chain.push_back(findChilds);
+        chain.push_back(findChild);
 
-        auto current = findChilds.lock()->GetParent();
+        auto current = findChild->GetParent();
         while (!current.expired())
         {
-            if (current.lock()->ContainsPoint(x, y))
+            if (current.lock()->ContainsPoint(m_inputControl.m_currentX, m_inputControl.m_currentY))
             {
                 chain.push_back(current);
             }
@@ -237,57 +239,124 @@ namespace sz_gui
         return true;
     }
 
-    void UIManager::bubbleEvent(const SDL_Event& event)
+    void UIManager::bubbleEvent(const std::shared_ptr<IUIBase>& findChild)
     {   
         // 命中情况下，深度+冒泡，规则：最近者(深度最大者)优先
         static std::vector<std::weak_ptr<IUIBase>> propagationChain;
         propagationChain.resize(0);
 
-        auto bFind = findTargetWriteChainAtPoint(event.button.x, event.button.y, propagationChain);
+        auto bFind = findTargetWriteChainAtPoint(findChild, propagationChain);
         if (!bFind || propagationChain.empty())
         {
             return;
         }
 
-        switch (event.type)
-        {
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-        {
-            // 鼠标点击事件
-            auto t = events::MouseButtonEventData::Type::BUTTON_LEFT;
-            if (event.button.button == SDL_BUTTON_RIGHT)
-            {
-                t = events::MouseButtonEventData::Type::BUTTON_RIGHT;
-            }
-            else if (event.button.button == SDL_BUTTON_MIDDLE)
-            {
-                t = events::MouseButtonEventData::Type::BUTTON_MIDDLE;
-            }
-            else
-            {
-                return;
-            }
-            auto state = (event.button.type == SDL_EVENT_MOUSE_BUTTON_DOWN) ?
-                events::MouseButtonEventData::State::DOWN : events::MouseButtonEventData::State::UP;
-            events::MouseButtonEventData mbed{ t, state, event.button.x, event.button.y };
-            triggerMouseButton(mbed, propagationChain);
-        }
-        break;
-        }
-
+        triggerMouseButton(propagationChain);
         propagationChain.resize(0);
     }
 
-    void UIManager::triggerMouseButton(const events::MouseButtonEventData& mbed,
-        const std::vector<std::weak_ptr<IUIBase>>& propagationChain)
+    void UIManager::triggerMouseButton(const std::vector<std::weak_ptr<IUIBase>>& propagationChain)
     {
         for (auto it = propagationChain.begin(); it != propagationChain.end(); ++it)
         {
-            if (it->lock()->OnMouseButton(mbed))
+            if (it->lock()->OnMouseLeftButtonClick())
             {
                 break;
             }
+        }
+    }
+
+    void UIManager::mouseLeftButtonEvent()
+    {
+        std::shared_ptr<IUIBase> findChild;
+        // m_allUIMultimap，倒叙，按照Z值由大到小排序，Z值一样按照创建顺序排序
+        for (auto it = m_allUIMultimap.rbegin(); it != m_allUIMultimap.rend(); ++it)
+        {
+            if (!it->second->IsInteractive() || !it->second->IsVisible())
+			{
+				continue;
+			}
+
+			if (it->second->ContainsPoint(m_inputControl.m_currentX, m_inputControl.m_currentY))
+			{
+				// 最近者优先
+                findChild = it->second;
+				break;
+			}
+        }
+
+        if (!findChild)
+        {
+            if (m_mouseLeftPressUI && !m_inputControl.m_mouseRightIsDown)
+			{
+                m_mouseLeftPressUI->OnMouseLeftButtonUp();
+                m_mouseLeftPressUI = nullptr;
+			}
+			return;
+        }
+
+        if (!m_mouseLeftPressUI && m_inputControl.m_mouseLeftIsDown)
+        {
+            m_mouseLeftPressUI = findChild;
+            m_mouseLeftPressUI->OnMouseLeftButtonDown();
+        }
+        else if (m_mouseLeftPressUI == findChild && !m_inputControl.m_mouseLeftIsDown)
+        {
+            // 冒泡
+            bubbleEvent(findChild);
+            m_mouseLeftPressUI = nullptr;
+        }
+        else if (m_mouseLeftPressUI != findChild && !m_inputControl.m_mouseLeftIsDown)
+        {
+            m_mouseLeftPressUI->OnMouseLeftButtonUp();
+            m_mouseLeftPressUI = nullptr;
+        }
+    }
+
+    void UIManager::mouseMoveEvent()
+    {
+        std::shared_ptr<IUIBase> findChilds;
+        // m_allUIMultimap，倒叙，按照Z值由大到小排序，Z值一样按照创建顺序排序
+        for (auto it = m_allUIMultimap.rbegin(); it != m_allUIMultimap.rend(); ++it)
+        {
+            if (!it->second->IsInteractive() || !it->second->IsVisible())
+            {
+                continue;
+            }
+
+            if (it->second->ContainsPoint(m_inputControl.m_currentX, m_inputControl.m_currentY))
+            {
+                // 最近者优先
+                findChilds = it->second;
+                break;
+            }
+        }
+
+        if (!findChilds)
+        {
+            if (m_mouseMoveEnterUI)
+            {
+                m_mouseMoveEnterUI->OnMouseMoveLeave();
+			    m_mouseMoveEnterUI = nullptr;
+            }
+            return;
+        }
+
+        if (!m_mouseMoveEnterUI)
+        {
+            m_mouseMoveEnterUI = findChilds;
+            m_mouseMoveEnterUI->OnMouseMoveEnter();
+        }
+        else if (m_mouseMoveEnterUI == findChilds)
+        {
+            m_mouseMoveEnterUI->OnMouseMove();
+        }
+        else
+        {
+            m_mouseMoveEnterUI->OnMouseMoveLeave();
+
+			m_mouseMoveEnterUI = findChilds;
+			m_mouseMoveEnterUI->OnMouseMoveEnter();
         }
     }
 }

@@ -20,6 +20,8 @@ namespace sz_gui
 		Top = 1 << 0,
 		// 是否可见
 		Visibale = 1 << 1,
+		// 是否可交互
+		Interactive = 1 << 2,
 	};
 
 	USING_BITMASK_OPERATORS()
@@ -33,8 +35,6 @@ namespace sz_gui
 	{
 		// 默认
 		None,
-		// 文字
-		Text,
 		// 边框控件
 		Frame,
 		// 按钮控件
@@ -81,6 +81,8 @@ namespace sz_gui
 		virtual void setChildIdForUIManager(uint64_t) = 0;
 		// 判断点是否在组件内
 		virtual bool ContainsPoint(float, float) const = 0;
+		// 设置UI的ZValue
+		virtual void SetZValue(float) = 0;
 		// 获取UI的ZValue
 		virtual float GetZValue() const = 0;
 		// 获取宽高
@@ -102,16 +104,30 @@ namespace sz_gui
 		virtual const std::string& GetName() = 0;
 		// 设置UI标记
 		virtual void SetUIFlag(UIFlag) = 0;
+		// 清除UI标记
+		virtual void ClearUIFlag(UIFlag) = 0;
 		// 是否有UI标记
 		virtual bool HasUIFlag(UIFlag) const = 0;
 		// 是否可见
 		virtual bool IsVisible() const = 0;
+		// 是否可交互
+		virtual bool IsInteractive() const = 0;
 		// 获取当前UI和父UI的AABB2D交集
 		virtual sz_ds::AABB2D getIntersectWithParent() const = 0;
-		// 鼠标点击事件，返回false将会阻止冒泡
-		virtual bool OnMouseButton(const events::MouseButtonEventData&) = 0;
+		// 鼠标左键点击事件，返回false将会阻止冒泡
+		virtual bool OnMouseLeftButtonClick() = 0;
+		// 鼠标左键按下事件
+		virtual void OnMouseLeftButtonDown() = 0;
+		// 鼠标左键抬起事件
+		virtual void OnMouseLeftButtonUp() = 0;
 		// 窗户发生变化事件
 		virtual void OnWindowResize() = 0;
+		// 鼠标移动进入事件
+		virtual void OnMouseMoveEnter() = 0;
+		// 鼠标移动事件
+		virtual void OnMouseMove() = 0;
+		// 鼠标移动离开事件
+		virtual void OnMouseMoveLeave() = 0;
 		// 收集渲染数据事件
 		virtual bool OnCollectRenderData() = 0;
 		// 设置颜色主题

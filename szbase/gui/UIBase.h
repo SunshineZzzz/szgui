@@ -57,6 +57,8 @@ namespace sz_gui
 		const ChildMultimap& getChilds() const { return m_childMultimap; }
 		// 判断点是否在组件内
 		bool ContainsPoint(float x, float y) const override;
+		// 设置UI的ZValue
+		void SetZValue(float z) override { m_z = z; }
 		// 获取UI的ZValue
 		float GetZValue() const override { return m_z; }
 		// 获取宽高
@@ -80,14 +82,24 @@ namespace sz_gui
 		layout::AnchorPoint GetAnchorPoint() const override { return m_anchorPoint; };
 		// 获取边距
 		layout::Margins GetMargins() const override  { return m_margins; };
-		// 鼠标点击事件，返回false将会阻止冒泡
-		bool OnMouseButton(const events::MouseButtonEventData&) override { return false; };
+		// 鼠标左键点击事件，返回false将会阻止冒泡
+		bool OnMouseLeftButtonClick() override  { return false; };
+		// 鼠标左键按下事件
+		void OnMouseLeftButtonDown() override  { return; };
+		// 鼠标左键抬起事件
+		void OnMouseLeftButtonUp() override  { return; };
 		// 窗户发生变化事件
 		void OnWindowResize() override 
 		{ 
 			setUploadOp(UploadOperation::UploadPos);
 			return; 
 		};
+		// 鼠标移动进入事件
+		void OnMouseMoveEnter() {};
+		// 鼠标移动事件
+		void OnMouseMove() {};
+		// 鼠标移动离开事件
+		void OnMouseMoveLeave() {};
 		// 收集渲染数据事件
 		bool OnCollectRenderData() override { return false; };
 		// 获取名称
@@ -101,12 +113,19 @@ namespace sz_gui
 		};
 		// 设置UI标记
 		void SetUIFlag(UIFlag flag) override  { m_flag |= flag; }
+		// 清除UI标记
+		void ClearUIFlag(UIFlag flag) override { m_flag &= ~flag; }
 		// 是否有UI标记
 		bool HasUIFlag(UIFlag flag) const override { return HasFlag(m_flag, flag); }
 		// 是否可见
 		virtual bool IsVisible() const override
 		{
 			return  HasUIFlag(UIFlag::Visibale);
+		}
+		// 是否可交互
+		virtual bool IsInteractive() const override
+		{
+			return HasUIFlag(UIFlag::Interactive);
 		}
 		// 获取当前UI和父UI的AABB2D交集
 		sz_ds::AABB2D getIntersectWithParent() const override;

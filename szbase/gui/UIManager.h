@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDL3/SDL.h>
-
 #include <vector>
 #include <cassert>
 #include <cstdint>
@@ -14,6 +12,7 @@
 #include "EventTypes.h"
 #include "Common.h"
 #include "ILayout.h"
+#include "InputControl.h"
 
 namespace sz_gui 
 {
@@ -70,15 +69,21 @@ namespace sz_gui
 		bool LayoutDelWidget(std::shared_ptr<IUIBase> widget) override { return m_layout->DelWidget(widget); }
 		// 绘制
 		void Render() override;
+		// 获取输入控制
+		const InputControl* GetInputControl() const override { return &m_inputControl; };
 
 	private:
 		// 根据位置填充UI链
-		bool findTargetWriteChainAtPoint(float x, float y, std::vector<std::weak_ptr<IUIBase>>& chain);
+		bool findTargetWriteChainAtPoint(const std::shared_ptr<IUIBase>& findChild,
+			std::vector<std::weak_ptr<IUIBase>>& chain);
 		// 事件冒泡
-		void bubbleEvent(const SDL_Event& event);
+		void bubbleEvent(const std::shared_ptr<IUIBase>& findChild);
 		// 触发鼠标点击事件
-		void triggerMouseButton(const events::MouseButtonEventData& mbed,
-			const std::vector<std::weak_ptr<IUIBase>>& propagationChain);
+		void triggerMouseButton(const std::vector<std::weak_ptr<IUIBase>>& propagationChain);
+		// 鼠标左键事件
+		void mouseLeftButtonEvent();
+		// 鼠标移动事件
+		void mouseMoveEvent();
 
 	private:
 		// 渲染器
@@ -100,5 +105,11 @@ namespace sz_gui
 		int m_height = 0;
 		// 布局
 		std::unique_ptr<ILayout> m_layout;
+		// 鼠标移动进入UI
+		std::shared_ptr<IUIBase> m_mouseMoveEnterUI;
+		// 鼠标左键按下UI
+		std::shared_ptr<IUIBase> m_mouseLeftPressUI;
+		// 输入控制
+		InputControl m_inputControl;
 	};
 }

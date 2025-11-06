@@ -176,8 +176,8 @@ int main(int argc, char* argv[])
         0, 0);
     app.RegToUI(frame);
     app.LayoutAddWidget(frame);
-    frame->SetUIFlag(sz_gui::UIFlag::Top);
     frame->SetLayout(new sz_gui::layout::AnchorLayout());
+    frame->SetUIFlag(sz_gui::UIFlag::Top);
 
     auto btn1 = std::make_shared<sz_gui::widget::UIButton>("TopLeft",
         sz_gui::layout::AnchorPoint::TopLeft,
@@ -192,7 +192,7 @@ int main(int argc, char* argv[])
         80, 40);
     btn2->SetParent(frame);
     frame->AddWidget(btn2);
-
+    
     auto btn3 = std::make_shared<sz_gui::widget::UIButton>("Center",
         sz_gui::layout::AnchorPoint::Center, sz_gui::layout::Margins(0.0f),
         80, 40);

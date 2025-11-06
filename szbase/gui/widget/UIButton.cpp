@@ -1,4 +1,5 @@
 #include "UIButton.h"
+#include "../InputControl.h"
 
 namespace sz_gui
 {
@@ -16,13 +17,54 @@ namespace sz_gui
 			m_desireHeight = (float)desiredH;
 
 			SetColorTheme(ColorTheme::LightMode);
+            SetUIFlag(UIFlag::Interactive);
 		}
 
-		bool UIButton::OnMouseButton(const events::MouseButtonEventData& data)
-		{
-			// m_eventbus.Publish<events::MouseButtonEvent>(data);
-			return false;
-		}
+        bool UIButton::OnMouseLeftButtonClick()
+        {
+            m_mouseLeftIsDown = false;
+            setState(ButtonState::Normal);
+            return false;
+        }
+
+        void UIButton::OnMouseLeftButtonDown()
+        {
+            m_mouseLeftIsDown = true;
+            setState(ButtonState::Press);
+        }
+
+        void UIButton::OnMouseLeftButtonUp()
+        {
+            m_mouseLeftIsDown = false;
+            setState(ButtonState::Normal);
+        }
+
+        void UIButton::OnMouseMoveEnter()
+        {
+            if (m_mouseLeftIsDown)
+            {
+                return;
+            }
+            setState(ButtonState::Hover);
+        }
+
+        void UIButton::OnMouseMove()
+        {
+            if (m_mouseLeftIsDown)
+            {
+                return;
+            }
+            setState(ButtonState::Hover);
+        }
+
+        void UIButton::OnMouseMoveLeave()
+        {
+            if (m_mouseLeftIsDown)
+            {
+                return;
+            }
+            setState(ButtonState::Normal);
+        }
 
 		bool UIButton::OnCollectRenderData()
 		{
@@ -52,7 +94,7 @@ namespace sz_gui
 				0.0f, m_height, 0.0f,
 			};
 			// 顶点颜色信息
-			const std::vector<float>& colors = m_colors;
+			const std::vector<float>& colors = m_colors[m_state];
 			// 顶点数据索引
 			static std::vector<uint32_t> indices = 
 			{
@@ -77,68 +119,70 @@ namespace sz_gui
         {
             UIBase::SetColorTheme(theme);
 
-            // 默认蓝
+            // 默认蓝 (Normal)
             const float R_NORM = 0.25f; const float G_NORM = 0.60f; const float B_NORM = 0.90f;
-            // 亮蓝 (悬停)
-            const float R_HOV = 0.30f; const float G_HOV = 0.65f; const float B_HOV = 0.95f;
-            // 暗蓝 (按下)
-            const float R_PRS = 0.20f; const float G_PRS = 0.55f; const float B_PRS = 0.85f;
-            // 褪色蓝 (禁用)
-            const float R_DIS = 0.60f; const float G_DIS = 0.80f; const float B_DIS = 0.95f;
+            // 亮蓝 (悬停 - Hover): 明显变亮
+            const float R_HOV = 0.35f; const float G_HOV = 0.70f; const float B_HOV = 0.98f;
+            // 暗蓝 (按下 - Press): 明显变暗
+            const float R_PRS = 0.15f; const float G_PRS = 0.45f; const float B_PRS = 0.75f;
+            // 褪色蓝 (禁用 - Disable): 褪色且发灰
+            const float R_DIS = 0.70f; const float G_DIS = 0.80f; const float B_DIS = 0.88f;
 
-            if (m_state == ButtonState::disable)
+            switch (theme)
             {
-                switch (theme)
+            case ColorTheme::LightMode:
+                m_colors[ButtonState::Disable] =
                 {
-                case ColorTheme::LightMode:
-                    m_colors =
-                    {
-                        R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
-                        R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
-                    };
-                    break;
-                }
+                    R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
+                    R_DIS, G_DIS, B_DIS, R_DIS, G_DIS, B_DIS,
+                };
+                break;
             }
-            else if (m_state == ButtonState::normal)
+
+            switch (theme)
             {
-                switch (theme)
+            case ColorTheme::LightMode:
+                m_colors[ButtonState::Normal] =
                 {
-                case ColorTheme::LightMode:
-                    m_colors =
-                    {
-                        R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
-                        R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
-                    };
-                    break;
-                }
+                    R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
+                    R_NORM, G_NORM, B_NORM, R_NORM, G_NORM, B_NORM,
+                };
+                break;
             }
-            else if (m_state == ButtonState::hover)
+
+            switch (theme)
             {
-                switch (theme)
+            case ColorTheme::LightMode:
+                m_colors[ButtonState::Hover] =
                 {
-                case ColorTheme::LightMode:
-                    m_colors =
-                    {
-                        R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
-                        R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
-                    };
-                    break;
-                }
+                    R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
+                    R_HOV, G_HOV, B_HOV, R_HOV, G_HOV, B_HOV,
+                };
+                break;
             }
-            else 
+
+            // press
+            switch (theme)
             {
-                // press
-                switch (theme)
+            case ColorTheme::LightMode:
+                m_colors[ButtonState::Press] =
                 {
-                case ColorTheme::LightMode:
-                    m_colors =
-                    {
-                        R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
-                        R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
-                    };
-                    break;
-                }
+                    R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
+                    R_PRS, G_PRS, B_PRS, R_PRS, G_PRS, B_PRS,
+                };
+                break;
             }
+        }
+
+        void UIButton::setState(ButtonState state)
+        {
+            if (m_state == state)
+            {
+                return;
+            }
+
+            m_state = state;
+            setUploadOp(UploadOperation::UploadColorOrUv);
         }
 	}
 }
