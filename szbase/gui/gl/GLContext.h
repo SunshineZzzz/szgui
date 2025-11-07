@@ -10,6 +10,7 @@
 
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
+#include <stb/stb_truetype.h>
 
 #include <tuple>
 #include <string>
@@ -23,6 +24,7 @@
 #include "OrthographicCamera.h"
 #include "RenderItem.h"
 #include "CheckRstErr.h"
+#include "Texture.h"
 
 namespace sz_gui 
 {
@@ -40,6 +42,8 @@ namespace sz_gui
 
             // 初始化
             std::tuple<std::string, bool> Init(int width, int height) override;
+            // 构建矢量字体
+            std::tuple<std::string, bool> BuildTrueType(const std::string& filename) override;
             // 加入绘制数据
             void AppendDrawData(const std::vector<float>& positions,
                 const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
@@ -58,6 +62,16 @@ namespace sz_gui
             void SetColorTheme(ColorTheme theme) override;
 
         private:
+            // 加入UI绘制数据
+            void appendUIDrawData(const std::vector<float>& positions,
+                const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
+                DrawCommand cmd);
+            // 额外加入UI绘制指令
+            void extraAppendUIDrawCommand(DrawCommand cmd);
+            // 加入文字绘制数据
+            void appendTextDrawData(const std::vector<float>& positions,
+                const std::vector<float>& uvs, const std::vector<uint32_t>& indices,
+                DrawCommand cmd);
             // 上传数据到GPU
             void uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
                 const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
@@ -88,6 +102,20 @@ namespace sz_gui
                     float(height), 0.0f, 1000.f);
             }
 
+        public:
+            // 字体渲染相关静态成员
+            // 纹理图集大小，4096x4096确保容纳中文和英文
+            static const int ATLAS_SIZE = 4096;
+            // 基准字体高度
+            inline static const float FONT_HEIGHT = 32.0f;
+            // ASCII字符范围
+            static const int ASCII_START_CODEPOINT = 32;
+            static const int ASCII_NUM_GLYPHS = 96;
+            // 中文CJK字符范围
+            static const int CJK_START_CODEPOINT = 0x4E00;
+            // GB2312一级汉字常用数量
+            static const int CJK_NUM_GLYPHS = 3755;
+
         private:
             using RenderItemLiist = std::list<std::unique_ptr<RenderItem>>;
             using RenderItemIdUnmap = std::unordered_map<uint64_t, RenderItemLiist::iterator>;
@@ -107,15 +135,27 @@ namespace sz_gui
             // 文字shader
             std::unique_ptr<Shader> m_textShader{ nullptr };
             // 不透明绘制对象
-            RenderItemIdUnmap m_opacityUnmap;
-            RenderItemLiist m_opacityItems;
+            RenderItemIdUnmap m_opacityUIUnmap;
+            RenderItemLiist m_opacityUIItems;
+            RenderItemIdUnmap m_opacityTextUnmap;
+            RenderItemLiist m_opacityTextItems;
             // 透明绘制对象
-            RenderItemIdUnmap m_transparentUnmap;
-            RenderItemLiist m_transparentItems;
+            RenderItemIdUnmap m_transparentUIUnmap;
+            RenderItemLiist m_transparentUIItems;
+            RenderItemIdUnmap m_transparentTextUnmap;
+            RenderItemLiist m_transparentTextItems;
             // 裁剪测试栈
             std::stack<bool> m_scissorStack;
             // 颜色主题
             ColorTheme m_colorTheme = ColorTheme::LightMode;
+            // 字体数据存储
+            std::vector<unsigned char> m_ttfBuffer;
+            // ASCII字体烘焙结果
+            stbtt_packedchar m_packedAscii[ASCII_NUM_GLYPHS];
+            // 中文字体烘焙结果
+            stbtt_packedchar m_packedChinese[CJK_NUM_GLYPHS];
+            // 字体纹理
+            std::unique_ptr<Texture> m_fontTexture;
         };
     }
 }

@@ -46,6 +46,25 @@ namespace sz_gui
         SDL_Quit();
     }
 
+    std::tuple<const std::string, bool> SDLApp::BuildTrueType(const std::string path)
+    {
+        std::string errMsg = "success";
+
+		if (!m_window || !m_render || !m_uiManager)
+		{
+			errMsg = "not init sdl";
+			return { std::move(errMsg), false };
+		}
+
+        auto [err, ok] = m_render->BuildTrueType(path);
+		if (!ok)
+		{
+			return { std::move(err), false };
+		}
+
+		return { std::move(errMsg), true };
+    }
+
     std::tuple<const std::string, bool> SDLApp::CreateWindow(
         const std::string& title, const int& width, const int& height)
     {

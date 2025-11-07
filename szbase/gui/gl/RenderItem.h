@@ -63,6 +63,9 @@ namespace sz_gui
 			bool m_scissorTest{ false };
 			int32_t m_scissorX, m_scissorY;
 			int32_t m_scissorW, m_scissorH;
+
+			// 文字相关
+			TextInfo m_textInfo;
 		};
 	}
 }

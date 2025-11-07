@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include "../UIBase.h"
-#include "../../macro/Macro.h"
 
 namespace sz_gui
 {
@@ -59,7 +58,10 @@ namespace sz_gui
             void SetColorTheme(ColorTheme theme) override;
 
         private:
+            // 设置按钮状态
             void setState(ButtonState state);
+            // 加入文字渲染数据
+            void appendTextDrawData(UploadOperation uploadOp);
 
         protected:
             // 按钮颜色

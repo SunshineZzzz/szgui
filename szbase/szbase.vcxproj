@@ -514,6 +514,7 @@
     <ClInclude Include="..\3rd\SDL3-3.2.24\include\SDL3\SDL_version.h" />
     <ClInclude Include="..\3rd\SDL3-3.2.24\include\SDL3\SDL_video.h" />
     <ClInclude Include="..\3rd\SDL3-3.2.24\include\SDL3\SDL_vulkan.h" />
+    <ClInclude Include="..\3rd\stb-2.30\stb\stb_truetype.h" />
     <ClInclude Include="..\3rd\stb\stb_image.h" />
     <ClInclude Include="ds\Delegate.h" />
     <ClInclude Include="ds\EventBus.h" />
@@ -540,7 +541,7 @@
     <ClInclude Include="gui\UIManager.h" />
     <ClInclude Include="gui\widget\UIButton.h" />
     <ClInclude Include="gui\widget\UIFrame.h" />
-    <ClInclude Include="macro\Macro.h" />
+    <ClInclude Include="string\String.h" />
     <ClInclude Include="test\TestFramework.h" />
     <ClInclude Include="time\Timestamp.h" />
     <ClInclude Include="utils\BitwiseEnum.h" />

@@ -71,8 +71,8 @@
     <Filter Include="szbase\gui\gl">
       <UniqueIdentifier>{5aefe58c-2f8d-4b40-8b9b-83953b465339}</UniqueIdentifier>
     </Filter>
-    <Filter Include="szbase\macro">
-      <UniqueIdentifier>{fe9f0eb3-83e6-49bc-af93-f7347263ebed}</UniqueIdentifier>
+    <Filter Include="szbase\string">
+      <UniqueIdentifier>{2a8e34a7-69f3-49ec-a16b-2bd8237fee89}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1318,11 +1318,14 @@
     <ClInclude Include="gui\gl\ShaderDefine.h">
       <Filter>szbase\gui\gl</Filter>
     </ClInclude>
-    <ClInclude Include="macro\Macro.h">
-      <Filter>szbase\macro</Filter>
-    </ClInclude>
     <ClInclude Include="gui\InputControl.h">
       <Filter>szbase\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\3rd\stb-2.30\stb\stb_truetype.h">
+      <Filter>3rd\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="string\String.h">
+      <Filter>szbase\string</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

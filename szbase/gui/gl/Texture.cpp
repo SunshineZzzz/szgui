@@ -9,6 +9,39 @@ namespace sz_gui
 {
 	namespace gl
 	{
+		Texture* Texture::CreateFont(
+			const void* pixels,
+			uint32_t width,
+			uint32_t height,
+			uint32_t unit
+		)
+		{
+			Texture* texture = new Texture(unit);
+			texture->m_width = width;
+			texture->m_height = height;
+
+			// 创建纹理对象
+			GL_CALL(glGenTextures(1, &texture->m_texture));
+			// 激活纹理单元
+			GL_CALL(glActiveTexture(GL_TEXTURE0 + texture->m_unit));
+			// 绑定纹理对象
+			GL_CALL(glBindTexture(GL_TEXTURE_2D, texture->m_texture));
+			// 纹理对象m_texture就被对应到了纹理单元GL_TEXTURE0+m_unit
+			// 开辟显存，并上传数据
+			GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RED,
+				texture->m_width, texture->m_height, 0, GL_RED, GL_UNSIGNED_BYTE, pixels));
+
+			// 设置纹理参数
+			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+			GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+			// 解绑纹理
+			GL_CALL(glBindTexture(GL_TEXTURE_2D, 0));
+			return texture;
+		}
+
 		Texture::Texture(uint32_t unit):
 			m_unit(unit)
 		{}

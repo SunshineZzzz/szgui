@@ -142,9 +142,27 @@ namespace sz_gui
 		TextMaterial,
 	};
 
+	// 文字相关
+	struct TextInfo
+	{
+		// 字体颜色
+		glm::vec3 m_color;
+	};
+
+	// 绘制目标
+	enum class DrawTarget
+	{
+		// UI
+		UI,
+		// 文字
+		Text,
+	};
+
 	// 绘制命令，描述一次绘制调用
 	struct DrawCommand 
 	{
+		// 绘制目标
+		DrawTarget m_drawTarget = DrawTarget::UI;
 		// 唯一Id
 		uint64_t m_onlyId;
 		// 世界位置
@@ -166,6 +184,8 @@ namespace sz_gui
 		Blend m_blend;
 		// 裁剪测试参数
 		ScissorTest m_scissorTest;
+		// 文字参数
+		TextInfo m_textInfo;
 		// 顶点数据索引数量
 		size_t m_indexCount = 0;
 	};
@@ -186,6 +206,8 @@ namespace sz_gui
 	public:
 		// 初始化
 		virtual std::tuple<std::string, bool> Init(int,int) = 0;
+		// 构建矢量字体
+		virtual std::tuple<std::string, bool> BuildTrueType(const std::string&) = 0;
 		// 加入绘制数据
 		virtual void AppendDrawData(const std::vector<float>& positions, const std::vector<float>& colorOrUVs, 
 			const std::vector<uint32_t>& indices, 

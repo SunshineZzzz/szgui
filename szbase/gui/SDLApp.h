@@ -25,6 +25,8 @@ namespace sz_gui
 		// 创建窗口
 		std::tuple<const std::string, bool> CreateWindow(
 			const std::string& title, const int& width, const int& height);
+		// 构建矢量字体
+		std::tuple<const std::string, bool> BuildTrueType(const std::string path);
 		// 运行
 		void Run();
 		// 渲染

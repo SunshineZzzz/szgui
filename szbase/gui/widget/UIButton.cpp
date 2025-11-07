@@ -1,5 +1,6 @@
 #include "UIButton.h"
 #include "../InputControl.h"
+#include "../../string/String.h"
 
 namespace sz_gui
 {
@@ -101,16 +102,19 @@ namespace sz_gui
 				0, 1, 2, 
 				2, 3 ,0, 
 			};
-
+            // 上传操作
+            auto uploadOp = getUploadOp();
 			// 绘制命令
 			DrawCommand dCmd;
 			dCmd.m_onlyId = m_childIdForUIManager;
 			dCmd.m_worldPos = { m_x, m_y, m_z };
-			dCmd.m_uploadOp = getUploadOp();
+			dCmd.m_uploadOp = uploadOp;
 			dCmd.m_drawMode = DrawMode::TRIANGLES;
 
 			auto& render = m_uiManager.lock()->GetRender();
 			render->AppendDrawData(positions, colors, indices, dCmd);
+            // 加入绘制文字数据
+            appendTextDrawData(uploadOp);
 
 			return true;
 		}
@@ -183,6 +187,25 @@ namespace sz_gui
 
             m_state = state;
             setUploadOp(UploadOperation::UploadColorOrUv);
+        }
+
+        void UIButton::appendTextDrawData(UploadOperation uploadOp)
+        {
+            if (sz_string::IsOnlyWhitespace(m_text))
+            {
+                return;
+            }
+
+            // 绘制命令
+            DrawCommand dCmd;
+            dCmd.m_drawTarget = DrawTarget::Text;
+            dCmd.m_onlyId = m_childIdForUIManager;
+            dCmd.m_worldPos = { m_x, m_y, m_z };
+            dCmd.m_uploadOp = uploadOp;
+            dCmd.m_drawMode = DrawMode::TRIANGLES;
+            dCmd.m_renderState = dCmd.m_renderState | RenderState::EnableBlend;
+            dCmd.m_materialType = MaterialType::TextMaterial;
+
         }
 	}
 }

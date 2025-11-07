@@ -295,7 +295,11 @@ namespace sz_gui
 			return;
         }
 
-        if (!m_mouseLeftPressUI && m_inputControl.m_mouseLeftIsDown)
+        if (!m_mouseLeftPressUI && !m_inputControl.m_mouseLeftIsDown)
+        {
+            return;
+        }
+        else if (!m_mouseLeftPressUI && m_inputControl.m_mouseLeftIsDown)
         {
             m_mouseLeftPressUI = findChild;
             m_mouseLeftPressUI->OnMouseLeftButtonDown();

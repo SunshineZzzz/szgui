@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
     sz_gui::SDLApp app;
 
     app.CreateWindow("test", 800, 600);
-
+    app.BuildTrueType(R"(D:\github\szgui\sln\x64\Debug\SimSun.ttf)");
     app.SetLayout(new sz_gui::layout::AnchorLayout());
 
     auto frame = std::make_shared<sz_gui::widget::UIFrame>("Center",

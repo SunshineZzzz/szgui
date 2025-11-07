@@ -20,6 +20,15 @@ namespace sz_gui
 		class Texture
 		{
 		public:
+			// 创建字体纹理
+			static Texture* CreateFont(
+				const void* pixels,
+				uint32_t width,
+				uint32_t height,
+				uint32_t unit
+			);
+
+		public:
 			Texture(uint32_t unit);
 			~Texture();
 
@@ -31,6 +40,11 @@ namespace sz_gui
 				// 先激活纹理单元，然后绑定纹理对象
 				GL_CALL(glActiveTexture(GL_TEXTURE0 + m_unit));
 				GL_CALL(glBindTexture(m_textureTarget, m_texture));
+			}
+			// 获取纹理单元号
+			unsigned int GetUnit() const
+			{
+				return m_unit;
 			}
 
 		private:
