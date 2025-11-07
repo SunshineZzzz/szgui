@@ -136,14 +136,12 @@ namespace sz_gui
             std::unique_ptr<Shader> m_textShader{ nullptr };
             // 不透明绘制对象
             RenderItemIdUnmap m_opacityUIUnmap;
-            RenderItemLiist m_opacityUIItems;
             RenderItemIdUnmap m_opacityTextUnmap;
-            RenderItemLiist m_opacityTextItems;
+            RenderItemLiist m_opacityItems;
             // 透明绘制对象
             RenderItemIdUnmap m_transparentUIUnmap;
-            RenderItemLiist m_transparentUIItems;
             RenderItemIdUnmap m_transparentTextUnmap;
-            RenderItemLiist m_transparentTextItems;
+            RenderItemLiist m_transparentItems;
             // 裁剪测试栈
             std::stack<bool> m_scissorStack;
             // 颜色主题

@@ -208,7 +208,8 @@ namespace sz_gui
             const std::vector<uint32_t>& indices, DrawCommand cmd)
         { 
             assert(cmd.m_onlyId);
-
+            assert(cmd.m_materialType == MaterialType::ColorMaterial || 
+                cmd.m_materialType == MaterialType::TextureMaterial);
             RenderItem* ri = nullptr;
             bool oldOpcacity = false;
             bool oldTransparent = false;
@@ -238,10 +239,10 @@ namespace sz_gui
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend) && oldOpcacity)
             {
                 auto oldRenderItem = std::move(*(oIt->second));
-                m_opacityUIItems.erase(oIt->second);
+                m_opacityItems.erase(oIt->second);
                 m_opacityUIUnmap.erase(oIt);
 
-                auto it = m_transparentUIItems.insert(m_transparentUIItems.end(), std::move(oldRenderItem));
+                auto it = m_transparentItems.insert(m_transparentItems.end(), std::move(oldRenderItem));
                 m_transparentUIUnmap[cmd.m_onlyId] = it;
                 oldOpcacity = false;
                 oldTransparent = true;
@@ -292,13 +293,13 @@ namespace sz_gui
 
             if (ri->m_blend)
             {
-                m_transparentUIItems.push_back(std::unique_ptr<RenderItem>(ri));
-                m_transparentUIUnmap[cmd.m_onlyId] = std::prev(m_transparentUIItems.end());
+                m_transparentItems.push_back(std::unique_ptr<RenderItem>(ri));
+                m_transparentUIUnmap[cmd.m_onlyId] = std::prev(m_transparentItems.end());
                 return;
             }
 
-            m_opacityUIItems.push_back(std::unique_ptr<RenderItem>(ri));
-			m_opacityUIUnmap[cmd.m_onlyId] = std::prev(m_opacityUIItems.end());
+            m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
+			m_opacityUIUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
         }
         
         void GLContext::extraAppendUIDrawCommand(DrawCommand cmd)
@@ -375,10 +376,10 @@ namespace sz_gui
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend) && oldOpcacity)
             {
                 auto oldRenderItem = std::move(*(oIt->second));
-                m_opacityTextItems.erase(oIt->second);
+                m_opacityItems.erase(oIt->second);
                 m_opacityTextUnmap.erase(oIt);
 
-                auto it = m_transparentTextItems.insert(m_transparentTextItems.end(), std::move(oldRenderItem));
+                auto it = m_transparentItems.insert(m_transparentItems.end(), std::move(oldRenderItem));
                 m_transparentTextUnmap[cmd.m_onlyId] = it;
                 oldOpcacity = false;
                 oldTransparent = true;
@@ -429,13 +430,13 @@ namespace sz_gui
 
             if (ri->m_blend)
             {
-                m_transparentTextItems.push_back(std::unique_ptr<RenderItem>(ri));
-                m_transparentTextUnmap[cmd.m_onlyId] = std::prev(m_transparentTextItems.end());
+                m_transparentItems.push_back(std::unique_ptr<RenderItem>(ri));
+                m_transparentTextUnmap[cmd.m_onlyId] = std::prev(m_transparentItems.end());
                 return;
             }
 
-            m_opacityTextItems.push_back(std::unique_ptr<RenderItem>(ri));
-            m_opacityTextUnmap[cmd.m_onlyId] = std::prev(m_opacityTextItems.end());
+            m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
+            m_opacityTextUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
         }
 
         void GLContext::uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
@@ -503,7 +504,7 @@ namespace sz_gui
             GL_CALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             // 先绘制不透明物体，透明物体按照距离摄像机远近排序，由远到近绘制
-            m_transparentUIItems.sort(
+            m_transparentItems.sort(
                 [this](const std::unique_ptr<RenderItem>& a, const std::unique_ptr<RenderItem>& b) {
                     auto viewMatrix = m_camera->GetViewMatrix();
 
@@ -520,40 +521,16 @@ namespace sz_gui
                     return cameraPositionA.z < cameraPositionB.z;
                 }
             );
-            m_transparentTextItems.sort(
-                [this](const std::unique_ptr<RenderItem>& a, const std::unique_ptr<RenderItem>& b) {
-                    auto viewMatrix = m_camera->GetViewMatrix();
 
-                    // 计算a的相机系的Z
-                    auto modelMatrixA = a->GetModelMatrix();
-                    auto worldPositionA = modelMatrixA * glm::vec4(0.0, 0.0, 0.0, 1.0);
-                    auto cameraPositionA = viewMatrix * worldPositionA;
-
-                    // 计算b的相机系的Z
-                    auto modelMatrixB = b->GetModelMatrix();
-                    auto worldPositionB = modelMatrixB * glm::vec4(0.0, 0.0, 0.0, 1.0);
-                    auto cameraPositionB = viewMatrix * worldPositionB;
-
-                    return cameraPositionA.z < cameraPositionB.z;
-                }
-            );
 
             // 先绘制不透明物体
-            for (const auto& item : m_opacityUIItems)
-            {
-                renderObject(item);
-            }
-            for (const auto& item : m_opacityTextItems)
+            for (const auto& item : m_opacityItems)
             {
                 renderObject(item);
             }
 
             // 透明物体按照距离摄像机远近排序，由远到近绘制
-            for (const auto& item : m_transparentUIItems)
-            {
-                renderObject(item);
-            }
-            for (const auto& item : m_transparentTextItems)
+            for (const auto& item : m_transparentItems)
             {
                 renderObject(item);
             }
