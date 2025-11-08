@@ -208,9 +208,13 @@ namespace sz_gui
 		virtual std::tuple<std::string, bool> Init(int,int) = 0;
 		// 构建矢量字体
 		virtual std::tuple<std::string, bool> BuildTrueType(const std::string&) = 0;
+		// 绘制文字到缓冲区
+		virtual bool DrawTextToBuffer(const float, const float,
+			const std::vector<int32_t>&, std::vector<float>&, std::vector<float>&, 
+			std::vector<uint32_t>&) = 0;
 		// 加入绘制数据
-		virtual void AppendDrawData(const std::vector<float>& positions, const std::vector<float>& colorOrUVs, 
-			const std::vector<uint32_t>& indices, 
+		virtual void AppendDrawData(const std::vector<float>& positions, 
+			const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices, 
 			DrawCommand cmd) = 0;
 		// 额外加入绘制指令
 		virtual void ExtraAppendDrawCommand(DrawCommand cmd) = 0;

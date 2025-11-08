@@ -195,6 +195,26 @@ namespace sz_gui
             {
                 return;
             }
+            
+            auto codepoints = sz_string::UTF8Decode(m_text);
+            if (codepoints.empty())
+			{
+				return;
+			}
+
+            auto limitWidth = m_width - 2 * 2.0f;
+            auto limitHeight = m_height - 2 * 2.0f;
+
+            static std::vector<float> positions;
+            static std::vector<float> uvs;
+            static std::vector<uint32_t> indices;
+
+            auto& render = m_uiManager.lock()->GetRender();
+            if (!render->DrawTextToBuffer(limitWidth, limitHeight, codepoints, 
+                positions, uvs, indices))
+            {
+                return;
+            }
 
             // 绘制命令
             DrawCommand dCmd;

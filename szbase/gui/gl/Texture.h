@@ -46,6 +46,9 @@ namespace sz_gui
 			{
 				return m_unit;
 			}
+			// 获取纹理宽高
+			int GetWidth()const { return m_width; }
+			int GetHeight()const { return m_height; }
 
 		private:
 			// 纹理对象

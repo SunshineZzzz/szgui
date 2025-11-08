@@ -134,49 +134,238 @@ namespace sz_gui
                 errMsg = "read file error";
 				return { std::move(errMsg), false };
             }
-
+            
             m_ttfBuffer = std::move(buffer);
-            // 纹理图集内存                                                                                                                                  
+
+            // ASCII字体烘培
+            // 纹理图集内存                                                                                                                   
             std::vector<unsigned char> tempBitmap;
             tempBitmap.reserve(ATLAS_SIZE * ATLAS_SIZE);
-
-            // 配置多范围烘焙
-            stbtt_pack_range ranges[] = 
-            {
-                { FONT_HEIGHT, ASCII_START_CODEPOINT, NULL, ASCII_NUM_GLYPHS, m_packedAscii, 0, NULL },
-                { FONT_HEIGHT, CJK_START_CODEPOINT, NULL, CJK_NUM_GLYPHS, m_packedChinese, 0, NULL }
+            stbtt_packedchar packedAscii[ASCII_NUM_GLYPHS]{};
+            stbtt_pack_range range =
+            { 
+                FONT_HEIGHT, 
+                ASCII_START_CODEPOINT, 
+                NULL, 
+                ASCII_NUM_GLYPHS, 
+                packedAscii, 
             };
-            // 开始多范围字体烘焙
-            stbtt_pack_context spc;
+            stbtt_pack_context spc{};
             if (!stbtt_PackBegin(&spc, tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, 0, 1, NULL))
             {
-                errMsg = "stbtt_PackBegin failed";
+                errMsg = "stbtt_PackBegin failed for asciii";
                 return { std::move(errMsg), false };
             }
-            // 设置过采样，提高质量
-            stbtt_PackSetOversampling(&spc, 2, 2); 
-            // 执行多范围烘焙，打包到同一个纹理中
+            // stbtt_PackSetOversampling(&spc, 2, 2); 
             int success = stbtt_PackFontRanges(
                 &spc,
                 m_ttfBuffer.data(),
                 0,
-                ranges,
-                2 
+                &range,
+                1
             );
-            // 结束打包
             stbtt_PackEnd(&spc); 
-
-            // 检查烘焙结果
             if (success == 0) 
             {
-                errMsg = "stbtt_PackFontRanges failed. Atlas size might be too small.";
+                errMsg = "stbtt_PackFontRanges failed for asciii. Atlas size might be too small.";
                 return { std::move(errMsg), false };
             }
+            auto asciiTex = Texture::CreateFont(tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, 0);
+            m_fontTextureMap[0].reset(asciiTex);
+            for (int i = ASCII_START_CODEPOINT; i < ASCII_NUM_GLYPHS; ++i)
+            {
+                m_packedCharUnmap[i] = std::make_pair(0, packedAscii[i]);
+            }
 
-            auto tex = Texture::CreateFont(tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, 0);
-            m_fontTexture.reset(tex);
+            // CJK字体烘培
+            std::vector<int32_t> codepoints;
+            for (int32_t cp = CJK_START_CODEPOINT; cp <= CJK_NUM_GLYPHS; ++cp)
+            {
+                codepoints.push_back(cp);
+            }
+            int total = (int)codepoints.size();
+            int curOffset = 0;
+            uint32_t curTextureUnit = 1;
+            stbtt_packedchar packedCJK[CJK_BATCH_SIZE]{};
+            while (curOffset < total)
+            {
+                int numToPack = std::min(CJK_BATCH_SIZE, total - curOffset);
+                tempBitmap.clear();
+                if (!stbtt_PackBegin(&spc, tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, 0, 1, NULL))
+                {
+                    return { "stbtt_PackBegin failed for CJK batch", false };
+                }
+                // stbtt_PackSetOversampling(&spc, 2, 2);
+                stbtt_pack_range range = {
+                    FONT_HEIGHT,
+                    0,
+                    codepoints.data() + curOffset,
+                    numToPack,
+                    packedCJK
+                };
+                success = stbtt_PackFontRanges(
+                    &spc,
+                    m_ttfBuffer.data(),
+                    0,
+                    &range,
+                    1
+                );
+                stbtt_PackEnd(&spc);
+                if (success == 0)
+				{
+					return { "stbtt_PackFontRanges failed for CJK batch. Atlas size might be too small.", false };
+				}
+                auto cjkTex = Texture::CreateFont(tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, curTextureUnit);
+                m_fontTextureMap[curTextureUnit].reset(cjkTex);
+                for (int i = 0; i < numToPack; ++i)
+                {
+                    m_packedCharUnmap[codepoints[curOffset + i]] = std::make_pair(curTextureUnit, packedCJK[i]);
+                }
 
+                curOffset += numToPack;
+                curTextureUnit++;
+            }
 			return { errMsg, true };
+        }
+
+        bool GLContext::DrawTextToBuffer(const float limitWidth, const float limitHeight,
+            const std::vector<int32_t>& codepoints, std::vector<float>& positions,
+            std::vector<float>& uvs, std::vector<uint32_t>& indices)
+        {
+            if (codepoints.empty() || limitWidth < 0.0001f || limitHeight < 0.0001f)
+            {
+                return false;
+            }
+
+            positions.clear();
+            uvs.clear();
+            indices.clear();
+
+            Texture* tex = nullptr;
+            stbtt_packedchar* pcData = nullptr;
+            float current_x = 0.0f;
+            float current_y = 0.0f;
+            float max_w = 0.0f;
+            float max_h = FONT_HEIGHT;
+            float line_height = FONT_HEIGHT;
+
+            // 不缩放情况下计算绘制文本需要的总高度和总宽度
+            for (int32_t codepoint : codepoints) 
+            {
+                std::tie(pcData, tex) = getPackedCharData(codepoint);
+                if (!pcData) 
+				{
+					continue;
+				}
+             
+                // pcData->xadvance
+                // 渲染完这个字符后，光标应该向右移动多少距离，以便开始绘制下一个字符
+                if (current_x + pcData->xadvance > limitWidth)
+                {
+                    max_w = std::max(max_w, current_x);
+                    current_x = 0.0f;
+                    max_h += line_height;
+                }
+                current_x += pcData->xadvance;
+            }
+            max_w = std::max(max_w, current_x);
+
+            // 计算缩放比例
+            float scale_x = max_w > limitWidth ? limitWidth / max_w : 1.0f;
+            float scale_y = max_h > limitHeight ? limitHeight / max_h : 1.0f;
+            // 缩放比例取最小值
+            float scale = std::min(scale_x, scale_y);
+
+            // 重新布局并生成顶点数据
+            current_x = 0.0f;
+            current_y = 0.0f;
+            uint32_t vertex_offset = 0;
+            for (int32_t codepoint : codepoints)
+            {
+                std::tie(pcData, tex) = getPackedCharData(codepoint);
+                if (!pcData)
+                {
+                    continue;
+                }
+
+                float scaled_advance = pcData->xadvance * scale;
+                if (current_x + scaled_advance > limitWidth)
+                {
+                    current_x = 0.0f;
+                    current_y += line_height * scale;
+                    if (current_y + FONT_HEIGHT * scale > limitHeight) 
+                    {
+                        // 超出高度限制，停止渲染
+                        break;
+                    }
+                }
+
+                // 计算字符的屏幕坐标
+                // pcData->x0, pcData->y0, pcData->x1, pcData->y1
+                // 是字符在纹理图集中的左上角和右下角坐标，需要标准化为[0,1]
+                // pcData->xoff, pcData->yoff
+                // 相对于绘制位置的X偏移和Y偏移
+                // 
+                // 字符左下角X坐标
+                float char_x = current_x + pcData->xoff * scale;
+                // 字符左下角Y坐标
+                float char_y = current_y + pcData->yoff * scale;
+                // 字符渲染宽度
+                float char_w = (pcData->x1 - pcData->x0) * scale;
+                // 字符渲染高度
+                float char_h = (pcData->y1 - pcData->y0) * scale;
+
+                // 计算纹理坐标，标准化
+                float tex_width = static_cast<float>(tex->GetWidth());
+                float tex_height = static_cast<float>(tex->GetHeight());
+                float u0 = pcData->x0 / tex_width;
+                float v0 = pcData->y0 / tex_height;
+                float u1 = pcData->x1 / tex_width;
+                float v1 = pcData->y1 / tex_height;
+
+                // 添加顶点数据，每个字符4个顶点
+                // 顶点顺序：左上、右上、右下、左下，顺时针
+
+                // 位置数据
+                positions.insert(positions.end(), 
+                {
+                    // 左下
+                    char_x, char_y + char_h, 0.0f,
+                    // 右下
+                    char_x + char_w, char_y + char_h, 0.0f, 
+                    // 右上
+                    char_x + char_w, char_y, 0.0f,
+                    // 左上
+                    char_x, char_y, 0.0f              
+                });
+
+                // UV数据
+                uvs.insert(uvs.end(), 
+                {
+                    // 左下
+                    u0, v1,
+                    // 右下
+                    u1, v1,
+                    // 右上
+                    u1, v0,
+                    // 左上
+                    u0, v0
+                });
+
+                // 索引数据，每个字符2个三角形，6个索引
+                indices.insert(indices.end(), 
+                {
+                    // 第一个三角形
+                    vertex_offset, vertex_offset + 1, vertex_offset + 2,
+                    // 第二个三角形
+                    vertex_offset, vertex_offset + 2, vertex_offset + 3
+                });
+
+                current_x += scaled_advance;
+                vertex_offset += 4;
+            }
+
+            return positions.empty();
         }
 
         void GLContext::AppendDrawData(const std::vector<float>& positions, 
@@ -522,7 +711,6 @@ namespace sz_gui
                 }
             );
 
-
             // 先绘制不透明物体
             for (const auto& item : m_opacityItems)
             {
@@ -591,8 +779,8 @@ namespace sz_gui
                 shader->SetUniformMatrix4x4("viewMatrix", m_camera->GetViewMatrix());
                 shader->SetUniformMatrix4x4("projectionMatrix", m_camera->GetProjectionMatrix());
                 // 字体纹理
-                shader->SetUniformInt("sampler", m_fontTexture->GetUnit());
-                m_fontTexture->Bind();
+                // shader->SetUniformInt("sampler", m_fontTexture->GetUnit());
+                // m_fontTexture->Bind();
                 // 透明度
                 shader->SetUniformFloat("opacity", ri->m_opacity);
                 // 文字颜色
@@ -732,6 +920,17 @@ namespace sz_gui
 
 				GL_CALL(glDisable(GL_SCISSOR_TEST));
 			}
+        }
+
+        std::tuple<stbtt_packedchar*, Texture*>
+            GLContext::getPackedCharData(int32_t codepoint)
+        {
+            const auto& it = m_packedCharUnmap.find(codepoint);
+            if (it != m_packedCharUnmap.end())
+            {
+                return { &it->second.second, m_fontTextureMap[it->second.first].get()};
+            }
+            return { nullptr, nullptr };
         }
     }
 }

@@ -562,6 +562,7 @@
     <ClCompile Include="gui\UIManager.cpp" />
     <ClCompile Include="gui\widget\UIButton.cpp" />
     <ClCompile Include="gui\widget\UIFrame.cpp" />
+    <ClCompile Include="string\String.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="time\Timestamp.cpp" />
   </ItemGroup>

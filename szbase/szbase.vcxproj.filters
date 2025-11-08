@@ -1378,6 +1378,9 @@
     <ClCompile Include="gui\InputControl.cpp">
       <Filter>szbase\gui</Filter>
     </ClCompile>
+    <ClCompile Include="string\String.cpp">
+      <Filter>szbase\string</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\3rd\glm-1.0.1-light\glm\detail\func_common.inl">

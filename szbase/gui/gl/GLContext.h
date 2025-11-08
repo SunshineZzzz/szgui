@@ -44,6 +44,10 @@ namespace sz_gui
             std::tuple<std::string, bool> Init(int width, int height) override;
             // 构建矢量字体
             std::tuple<std::string, bool> BuildTrueType(const std::string& filename) override;
+            // 绘制文字到缓冲区
+            bool DrawTextToBuffer(const float limitWidth, const float limitHeight,
+                const std::vector<int32_t>& codepoints, std::vector<float>& positions,
+                std::vector<float>& uvs, std::vector<uint32_t>& indices) override;
             // 加入绘制数据
             void AppendDrawData(const std::vector<float>& positions,
                 const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
@@ -101,20 +105,26 @@ namespace sz_gui
                 m_camera = std::make_unique<OrthographicCamera>(0.0f, float(width), 0.0f,
                     float(height), 0.0f, 1000.f);
             }
+            // 根据codepoint获取数据
+            std::tuple<stbtt_packedchar*, Texture*>
+                getPackedCharData(int32_t codepoint);
 
         public:
             // 字体渲染相关静态成员
-            // 纹理图集大小，4096x4096确保容纳中文和英文
+            // 纹理图集大小
             static const int ATLAS_SIZE = 4096;
             // 基准字体高度
             inline static const float FONT_HEIGHT = 32.0f;
             // ASCII字符范围
-            static const int ASCII_START_CODEPOINT = 32;
-            static const int ASCII_NUM_GLYPHS = 96;
+            static const int ASCII_START_CODEPOINT = 0x20;
+            static const int ASCII_NUM_GLYPHS = 0x60;
             // 中文CJK字符范围
             static const int CJK_START_CODEPOINT = 0x4E00;
-            // GB2312一级汉字常用数量
-            static const int CJK_NUM_GLYPHS = 3755;
+            static const int CJK_NUM_GLYPHS = 0x9FA5;
+            // CJK单次烘焙的字符块大小(估算每个4096X4096图集能容纳的安全数量)
+            // 4096*4096/32*32/4(stbtt_PackSetOversampling(&spc, 2, 2)) = 4096
+            // static const int CJK_BATCH_SIZE = 4096;
+            static const int CJK_BATCH_SIZE = 16384;
 
         private:
             using RenderItemLiist = std::list<std::unique_ptr<RenderItem>>;
@@ -148,12 +158,10 @@ namespace sz_gui
             ColorTheme m_colorTheme = ColorTheme::LightMode;
             // 字体数据存储
             std::vector<unsigned char> m_ttfBuffer;
-            // ASCII字体烘焙结果
-            stbtt_packedchar m_packedAscii[ASCII_NUM_GLYPHS];
-            // 中文字体烘焙结果
-            stbtt_packedchar m_packedChinese[CJK_NUM_GLYPHS];
+            // 字体烘焙结果，codepoint<->(texture_uint_id, stbtt_packedchar)
+            std::unordered_map<int32_t, std::pair<uint32_t, stbtt_packedchar>> m_packedCharUnmap;
             // 字体纹理
-            std::unique_ptr<Texture> m_fontTexture;
+            std::unordered_map<int32_t, std::unique_ptr<Texture>> m_fontTextureMap;
         };
     }
 }

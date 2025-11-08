@@ -67,7 +67,7 @@ namespace sz_gui
             // 按钮颜色
             std::map<ButtonState, std::vector<float>> m_colors;
             // 按钮文本
-            std::string m_text;
+            std::string m_text = "按钮";
             // 当前按钮状态 
             ButtonState m_state = ButtonState::Normal;
             // 鼠标左键是否按下
