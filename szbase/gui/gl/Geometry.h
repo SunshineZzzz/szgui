@@ -19,17 +19,25 @@ namespace sz_gui
 		class Geometry
 		{
 		public:
-			Geometry(size_t posCapacity, size_t colorOruvCapacity, 
-				size_t indicesCapacity, bool useColor);
+			Geometry(size_t posSize, size_t colorOruvSize, 
+				size_t indicesSize, bool useColor);
+			Geometry(size_t posSize, size_t uvSize,
+				size_t layerSize, size_t indicesSize);
 			~Geometry();
 
 			// 上传
 			void UploadPositions(const std::vector<float>& positions);
 			void UploadColorsOrUVs(const std::vector<float>& colorsOruvs);
 			void UploadIndices(const std::vector<uint32_t>& indices);
+			void UploadLayers(const std::vector<float>& layers);
 			// 上传所有
 			void UploadAll(const std::vector<float>& positions,
 				const std::vector<float>& uvsOrColors,
+				const std::vector<uint32_t>& indices
+			);
+			void UploadAll(const std::vector<float>& positions,
+				const std::vector<float>& uvs,
+				const std::vector<float>& layers,
 				const std::vector<uint32_t>& indices
 			);
 			void UploadUVs(const std::vector<float>& positions,
@@ -56,6 +64,8 @@ namespace sz_gui
 			GLuint m_colorVbo{ 0 };
 			// 顶点uv坐标vbo
 			GLuint m_uvVbo{ 0 };
+			// 顶点层vbo
+			GLuint m_layerVbo{ 0 };
 			// 元素缓冲对象/索引缓冲对象，用来存储顶点绘制顺序索引号
 			GLuint m_ebo{ 0 };
 			// 绘制索引个数
@@ -65,6 +75,7 @@ namespace sz_gui
 			// 顶点容量
 			size_t m_posCapacity{ 0 };
 			size_t m_colorOrUVCapacity{ 0 };
+			size_t m_layerCapacity{ 0 };
 			size_t m_indicesCapacity{ 0 };
 		};
 	}

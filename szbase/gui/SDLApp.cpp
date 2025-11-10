@@ -46,7 +46,7 @@ namespace sz_gui
         SDL_Quit();
     }
 
-    std::tuple<const std::string, bool> SDLApp::BuildTrueType(const std::string path)
+    std::tuple<std::string, bool> SDLApp::BuildTrueType(const std::string path)
     {
         std::string errMsg = "success";
 
@@ -65,7 +65,7 @@ namespace sz_gui
 		return { std::move(errMsg), true };
     }
 
-    std::tuple<const std::string, bool> SDLApp::CreateWindow(
+    std::tuple<std::string, bool> SDLApp::CreateWindow(
         const std::string& title, const int& width, const int& height)
     {
         std::string errMsg = "success";

@@ -32,7 +32,7 @@ namespace sz_gui
 			Texture(uint32_t unit);
 			~Texture();
 
-			std::tuple<const std::string, bool> Load(const std::string& path);
+			std::tuple<std::string, bool> Load(const std::string& path);
 			// 纹理单元与纹理对象绑定
 			// 存在多个纹理对象绑定一个纹理单元的情况，该函数做切换纹理单元与纹理对象绑定
 			void Bind() const
@@ -42,7 +42,7 @@ namespace sz_gui
 				GL_CALL(glBindTexture(m_textureTarget, m_texture));
 			}
 			// 获取纹理单元号
-			unsigned int GetUnit() const
+			uint32_t GetUnit() const
 			{
 				return m_unit;
 			}

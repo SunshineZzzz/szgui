@@ -10,7 +10,7 @@ namespace sz_gui
 {
 	namespace gl
 	{
-		static std::tuple<const std::string, bool> readShaderFromFile(const char* szFilePath)
+		static std::tuple<std::string, bool> readShaderFromFile(const char* szFilePath)
 		{
 			std::string shaderCode;
 			std::ifstream shaderFile;
@@ -40,7 +40,7 @@ namespace sz_gui
 			}
 		}
 
-		std::tuple<const std::string, bool> Shader::LoadFromFile(const char* vertexShaderPath,
+		std::tuple<std::string, bool> Shader::LoadFromFile(const char* vertexShaderPath,
 			const char* fragmentShaderPath)
 		{
 			std::string errMsg = "success";
@@ -62,7 +62,7 @@ namespace sz_gui
 			return LoadFromString(vertexCode.c_str(), fragmentCode.c_str());
 		}
 
-		std::tuple<const std::string, bool> Shader::LoadFromString(const char* vertexShaderSource,
+		std::tuple<std::string, bool> Shader::LoadFromString(const char* vertexShaderSource,
 			const char* fragmentShaderSource)
 		{
 			std::string errMsg = "success";
@@ -155,6 +155,12 @@ namespace sz_gui
 		{
 			GLint location = glGetUniformLocation(m_program, name.c_str());
 			GL_CALL(glUniform3fv(location, 1, values));
+		}
+
+		void Shader::SetUniformVector3(const std::string& name, const glm::vec3 value) const
+		{
+			GLint location = glGetUniformLocation(m_program, name.c_str());
+			GL_CALL(glUniform3fv(location, 1, glm::value_ptr(value)));
 		}
 
 		void Shader::SetUniformInt(const std::string& name, int value) const

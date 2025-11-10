@@ -74,6 +74,9 @@
     <Filter Include="szbase\string">
       <UniqueIdentifier>{2a8e34a7-69f3-49ec-a16b-2bd8237fee89}</UniqueIdentifier>
     </Filter>
+    <Filter Include="szbase\macro">
+      <UniqueIdentifier>{58284f31-f758-4d3a-bbfd-374035dd81e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\3rd\ANGLE\include\KHR\khrplatform.h">
@@ -1327,6 +1330,12 @@
     <ClInclude Include="string\String.h">
       <Filter>szbase\string</Filter>
     </ClInclude>
+    <ClInclude Include="gui\gl\TextureArray.h">
+      <Filter>szbase\gui\gl</Filter>
+    </ClInclude>
+    <ClInclude Include="macro\Macro.h">
+      <Filter>szbase\macro</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gui\SDLApp.cpp">
@@ -1380,6 +1389,9 @@
     </ClCompile>
     <ClCompile Include="string\String.cpp">
       <Filter>szbase\string</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\gl\TextureArray.cpp">
+      <Filter>szbase\gui\gl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

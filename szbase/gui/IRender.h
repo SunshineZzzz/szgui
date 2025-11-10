@@ -96,6 +96,8 @@ namespace sz_gui
 		UploadColorOrUv = 1 << 2,
 		// 上传Index
 		UploadIndex = 1 << 3,
+		// 上传文字
+		UploadText = 1 << 4,
 	};
 
 	// 绘制状态
@@ -113,10 +115,20 @@ namespace sz_gui
 		EnableScissorSet = 1 << 5,
 	};
 
+	// 文字对齐方式
+	enum class TextAlignment : uint32_t
+	{
+		// 水平居中
+		HCenter = 1 << 0,
+		// 垂直居中
+		VCenter = 1 << 1,
+	};
+
 	USING_BITMASK_OPERATORS()
 }
 ENABLE_BITMASK_OPERATORS(sz_gui::RenderState)
 ENABLE_BITMASK_OPERATORS(sz_gui::UploadOperation)
+ENABLE_BITMASK_OPERATORS(sz_gui::TextAlignment)
 
 namespace sz_gui
 {
@@ -146,7 +158,7 @@ namespace sz_gui
 	struct TextInfo
 	{
 		// 字体颜色
-		glm::vec3 m_color;
+		glm::vec3 m_color = { 0.0f, 0.0f, 0.0f };
 	};
 
 	// 绘制目标
@@ -209,13 +221,17 @@ namespace sz_gui
 		// 构建矢量字体
 		virtual std::tuple<std::string, bool> BuildTrueType(const std::string&) = 0;
 		// 绘制文字到缓冲区
-		virtual bool DrawTextToBuffer(const float, const float,
+		virtual bool DrawTextToBuffer(const TextAlignment, const float, const float,
 			const std::vector<int32_t>&, std::vector<float>&, std::vector<float>&, 
-			std::vector<uint32_t>&) = 0;
+			std::vector<uint32_t>&, std::vector<float>&) = 0;
 		// 加入绘制数据
 		virtual void AppendDrawData(const std::vector<float>& positions, 
 			const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices, 
 			DrawCommand cmd) = 0;
+		// 加入文字绘制数据
+		virtual void AppendTextDrawData(const std::vector<float>& positions, 
+			const std::vector<float>& uvs, const std::vector<uint32_t>& indices, 
+			const std::vector<float>& layers, DrawCommand cmd) = 0;
 		// 额外加入绘制指令
 		virtual void ExtraAppendDrawCommand(DrawCommand cmd) = 0;
 		// 绘制

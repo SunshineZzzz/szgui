@@ -2,6 +2,7 @@
 #include "Geometry.h"
 #include "CheckRstErr.h"
 #include "ShaderDefine.h"
+#include "../../macro/Macro.h"
 
 #include <unordered_set>
 #include <format>
@@ -102,7 +103,7 @@ namespace sz_gui
 			}
 
             m_textShader = std::make_unique<Shader>();
-            std::tuple(err, ok) = m_textShader->LoadFromString(TextVS, TextFS);
+            std::tie(err, ok) = m_textShader->LoadFromString(TextVS, TextFS);
             if (!ok)
 			{
 				return { err, false };
@@ -128,26 +129,38 @@ namespace sz_gui
             std::streamsize file_size = file.tellg();
             file.seekg(0, std::ios::beg);
 
-            std::vector<unsigned char> buffer(file_size);
-            if (!file.read(reinterpret_cast<char*>(buffer.data()), file_size)) 
+            std::vector<unsigned char> ttfBuffer(file_size);
+            if (!file.read(reinterpret_cast<char*>(ttfBuffer.data()), file_size))
             {
                 errMsg = "read file error";
 				return { std::move(errMsg), false };
             }
             
-            m_ttfBuffer = std::move(buffer);
+            int result = stbtt_InitFont(&m_fontInfo, ttfBuffer.data(), 0);
+            if (result == 0)
+			{
+				errMsg = "stbtt_InitFont failed";
+				return { std::move(errMsg), false };
+			}
+            stbtt_GetFontVMetrics(&m_fontInfo, &m_fontAscent, &m_fontDescent, &m_fontLineGap);
+            m_fontScale = stbtt_ScaleForPixelHeight(&m_fontInfo, FONT_HEIGHT);
+
+            // 创建字体纹理数组对象
+            m_fontTextureArray = std::make_unique<TextureArray>(0);
+            m_fontTextureArray->Create(ATLAS_SIZE, ATLAS_SIZE, FONT_LAYERS);
+            int32_t layers = 0;
 
             // ASCII字体烘培
-            // 纹理图集内存                                                                                                                   
+            // 纹理图集内存                                                                                                                
             std::vector<unsigned char> tempBitmap;
             tempBitmap.reserve(ATLAS_SIZE * ATLAS_SIZE);
-            stbtt_packedchar packedAscii[ASCII_NUM_GLYPHS]{};
+            stbtt_packedchar packedAscii[ASCII_END_CODEPOINT - ASCII_START_CODEPOINT]{};
             stbtt_pack_range range =
             { 
                 FONT_HEIGHT, 
                 ASCII_START_CODEPOINT, 
                 NULL, 
-                ASCII_NUM_GLYPHS, 
+                ASCII_END_CODEPOINT - ASCII_START_CODEPOINT,
                 packedAscii, 
             };
             stbtt_pack_context spc{};
@@ -159,7 +172,7 @@ namespace sz_gui
             // stbtt_PackSetOversampling(&spc, 2, 2); 
             int success = stbtt_PackFontRanges(
                 &spc,
-                m_ttfBuffer.data(),
+                ttfBuffer.data(),
                 0,
                 &range,
                 1
@@ -170,16 +183,21 @@ namespace sz_gui
                 errMsg = "stbtt_PackFontRanges failed for asciii. Atlas size might be too small.";
                 return { std::move(errMsg), false };
             }
-            auto asciiTex = Texture::CreateFont(tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, 0);
-            m_fontTextureMap[0].reset(asciiTex);
-            for (int i = ASCII_START_CODEPOINT; i < ASCII_NUM_GLYPHS; ++i)
+            if (!m_fontTextureArray->AddTexture(layers, tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE))
             {
-                m_packedCharUnmap[i] = std::make_pair(0, packedAscii[i]);
+                errMsg = "add ascii to texture array failed";
+                return { std::move(errMsg), false };
             }
+            for (int i = ASCII_START_CODEPOINT; i <= ASCII_END_CODEPOINT; ++i)
+            {
+                m_packedCharUnmap[i] = std::make_pair(layers, packedAscii[i - ASCII_START_CODEPOINT]);
+            }
+            layers++;
 
             // CJK字体烘培
             std::vector<int32_t> codepoints;
-            for (int32_t cp = CJK_START_CODEPOINT; cp <= CJK_NUM_GLYPHS; ++cp)
+            codepoints.reserve(CJK_END_CODEPOINT - CJK_START_CODEPOINT);
+            for (int32_t cp = CJK_START_CODEPOINT; cp <= CJK_END_CODEPOINT; ++cp)
             {
                 codepoints.push_back(cp);
             }
@@ -205,7 +223,7 @@ namespace sz_gui
                 };
                 success = stbtt_PackFontRanges(
                     &spc,
-                    m_ttfBuffer.data(),
+                    ttfBuffer.data(),
                     0,
                     &range,
                     1
@@ -215,8 +233,12 @@ namespace sz_gui
 				{
 					return { "stbtt_PackFontRanges failed for CJK batch. Atlas size might be too small.", false };
 				}
-                auto cjkTex = Texture::CreateFont(tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE, curTextureUnit);
-                m_fontTextureMap[curTextureUnit].reset(cjkTex);
+                if (!m_fontTextureArray->AddTexture(layers, tempBitmap.data(), ATLAS_SIZE, ATLAS_SIZE))
+                {
+                    errMsg = "add cjk to texture array failed";
+                    return { std::move(errMsg), false };
+                }
+                layers++;
                 for (int i = 0; i < numToPack; ++i)
                 {
                     m_packedCharUnmap[codepoints[curOffset + i]] = std::make_pair(curTextureUnit, packedCJK[i]);
@@ -228,9 +250,10 @@ namespace sz_gui
 			return { errMsg, true };
         }
 
-        bool GLContext::DrawTextToBuffer(const float limitWidth, const float limitHeight,
-            const std::vector<int32_t>& codepoints, std::vector<float>& positions,
-            std::vector<float>& uvs, std::vector<uint32_t>& indices)
+        bool GLContext::DrawTextToBuffer(const TextAlignment ta, const float limitWidth, 
+            const float limitHeight, const std::vector<int32_t>& codepoints, 
+            std::vector<float>& positions, std::vector<float>& uvs, std::vector<uint32_t>& indices, 
+            std::vector<float>& layers)
         {
             if (codepoints.empty() || limitWidth < 0.0001f || limitHeight < 0.0001f)
             {
@@ -240,26 +263,30 @@ namespace sz_gui
             positions.clear();
             uvs.clear();
             indices.clear();
-
-            Texture* tex = nullptr;
+            layers.clear();
+            
+            auto textureWidth = m_fontTextureArray->GetWidth();
+            auto textureHeight = m_fontTextureArray->GetHeight();
+            auto maxLayer = m_fontTextureArray->GetMaxLayer();
+            int32_t layer = -1;
             stbtt_packedchar* pcData = nullptr;
             float current_x = 0.0f;
             float current_y = 0.0f;
+            // 一个字符框从最高点到最低点，再加上额外行间距的总垂直高度
+            float line_height = (m_fontAscent - m_fontDescent + m_fontLineGap) * m_fontScale;
             float max_w = 0.0f;
-            float max_h = FONT_HEIGHT;
-            float line_height = FONT_HEIGHT;
+            float max_h = line_height;
 
             // 不缩放情况下计算绘制文本需要的总高度和总宽度
             for (int32_t codepoint : codepoints) 
             {
-                std::tie(pcData, tex) = getPackedCharData(codepoint);
-                if (!pcData) 
+                std::tie(layer, pcData) = getPackedCharData(codepoint);
+                if (!pcData || layer < 0 || layer > maxLayer)
 				{
-					continue;
+					return false;
 				}
-             
-                // pcData->xadvance
-                // 渲染完这个字符后，光标应该向右移动多少距离，以便开始绘制下一个字符
+                
+                // pcData->xadvance，渲染完这个字符后，光标应该向右移动多少距离，以便开始绘制下一个字符
                 if (current_x + pcData->xadvance > limitWidth)
                 {
                     max_w = std::max(max_w, current_x);
@@ -275,6 +302,44 @@ namespace sz_gui
             float scale_y = max_h > limitHeight ? limitHeight / max_h : 1.0f;
             // 缩放比例取最小值
             float scale = std::min(scale_x, scale_y);
+           
+            // 上面在计算缩放的时候使用的最小值，缩放以后，存在以前需要3行变成2行或者1行就够了
+            max_w = 0.0f;
+            max_h = line_height * scale;
+            current_x = 0.0f;
+            current_y = 0.0f;
+            for (int32_t codepoint : codepoints)
+            {
+                std::tie(layer, pcData) = getPackedCharData(codepoint);
+                if (current_x + pcData->xadvance * scale > limitWidth)
+                {
+                    max_w = std::max(max_w, current_x);
+                    current_x = 0.0f;
+                    max_h += line_height * scale;
+                }
+                current_x += pcData->xadvance * scale;
+            }
+            max_w = std::max(max_w, current_x);
+            // 水平偏移量
+            float horizontal_offset = 0.0f;
+            // 垂直偏移量
+            float vertical_offset = 0.0f;
+            if (ta == (TextAlignment::HCenter | TextAlignment::VCenter))
+            {
+                if (max_w < limitWidth)
+                {
+                    horizontal_offset = (limitWidth - max_w) / 2.0f;
+                }
+
+                if (max_h < limitHeight)
+				{
+					vertical_offset = (limitHeight - max_h) / 2.0f;
+				}
+            }
+            else
+            {
+                assert(0);
+            }
 
             // 重新布局并生成顶点数据
             current_x = 0.0f;
@@ -282,49 +347,47 @@ namespace sz_gui
             uint32_t vertex_offset = 0;
             for (int32_t codepoint : codepoints)
             {
-                std::tie(pcData, tex) = getPackedCharData(codepoint);
-                if (!pcData)
-                {
-                    continue;
-                }
+                std::tie(layer, pcData) = getPackedCharData(codepoint);
 
-                float scaled_advance = pcData->xadvance * scale;
-                if (current_x + scaled_advance > limitWidth)
+                // 换行判断
+                if (current_x + pcData->xadvance * scale > limitWidth)
                 {
                     current_x = 0.0f;
                     current_y += line_height * scale;
-                    if (current_y + FONT_HEIGHT * scale > limitHeight) 
-                    {
-                        // 超出高度限制，停止渲染
-                        break;
-                    }
                 }
-
+                
                 // 计算字符的屏幕坐标
                 // pcData->x0, pcData->y0, pcData->x1, pcData->y1
                 // 是字符在纹理图集中的左上角和右下角坐标，需要标准化为[0,1]
                 // pcData->xoff, pcData->yoff
-                // 相对于绘制位置的X偏移和Y偏移
-                // 
-                // 字符左下角X坐标
-                float char_x = current_x + pcData->xoff * scale;
-                // 字符左下角Y坐标
-                float char_y = current_y + pcData->yoff * scale;
-                // 字符渲染宽度
+                // https://learnopengl-cn.github.io/06%20In%20Practice/02%20Text%20Rendering/
+                // xoff，bearingX从origin到字符左边缘的水平距离(通常是正数)
+                // yoff，bearingY从origin到字符顶部的垂直距离(通常是负数)
+                 
+                // 字符左上角X坐标
+                float char_x = horizontal_offset + current_x + pcData->xoff * scale;
+                // 字符左上角Y坐标
+                // vertical_center_offset，整体居中偏移量
+                // current_y，当前行起始位置
+                // (m_fontAscent * m_fontScale * scale)
+                // 基线到字体中最高字符的距离
+                // (pcData->yoff * scale)
+                // 基线到当前字符顶部的距离，负数
+                float char_y = vertical_offset + current_y
+                    + (m_fontAscent * m_fontScale * scale)
+                    + (pcData->yoff * scale);
+                // float char_y = 0.0f;
                 float char_w = (pcData->x1 - pcData->x0) * scale;
                 // 字符渲染高度
                 float char_h = (pcData->y1 - pcData->y0) * scale;
 
                 // 计算纹理坐标，标准化
-                float tex_width = static_cast<float>(tex->GetWidth());
-                float tex_height = static_cast<float>(tex->GetHeight());
+                float tex_width = static_cast<float>(textureWidth);
+                float tex_height = static_cast<float>(textureHeight);
                 float u0 = pcData->x0 / tex_width;
                 float v0 = pcData->y0 / tex_height;
                 float u1 = pcData->x1 / tex_width;
                 float v1 = pcData->y1 / tex_height;
-
-                // 添加顶点数据，每个字符4个顶点
-                // 顶点顺序：左上、右上、右下、左下，顺时针
 
                 // 位置数据
                 positions.insert(positions.end(), 
@@ -355,17 +418,35 @@ namespace sz_gui
                 // 索引数据，每个字符2个三角形，6个索引
                 indices.insert(indices.end(), 
                 {
-                    // 第一个三角形
-                    vertex_offset, vertex_offset + 1, vertex_offset + 2,
-                    // 第二个三角形
-                    vertex_offset, vertex_offset + 2, vertex_offset + 3
+                     // 第一个三角形: 顺时针 (左下 -> 右上 -> 右下)
+                     vertex_offset,
+                     vertex_offset + 2,
+                     vertex_offset + 1,
+
+                     // 第二个三角形: 顺时针 (左下 -> 左上 -> 右上)
+                     vertex_offset,
+                     vertex_offset + 3,
+                     vertex_offset + 2
                 });
 
-                current_x += scaled_advance;
+                // 纹理层数据
+                layers.insert(layers.end(),
+                {
+                    // 左下
+                    float(layer),
+                    // 右下
+                    float(layer),
+                    // 右上
+                    float(layer),
+                    // 左上
+                    float(layer)
+                });
+
+                current_x += pcData->xadvance * scale;
                 vertex_offset += 4;
             }
 
-            return positions.empty();
+            return !positions.empty();
         }
 
         void GLContext::AppendDrawData(const std::vector<float>& positions, 
@@ -373,31 +454,8 @@ namespace sz_gui
             const std::vector<uint32_t>& indices, DrawCommand cmd)
         { 
             assert(cmd.m_onlyId);
-
-            if (cmd.m_drawTarget == DrawTarget::UI)
-            {
-                appendUIDrawData(positions, colorOrUVs, indices, cmd);
-                return;
-            }
-            appendTextDrawData(positions, colorOrUVs, indices, cmd);
-        }
-
-        void GLContext::ExtraAppendDrawCommand(DrawCommand cmd)
-        {
-            assert(cmd.m_onlyId);
-            if (cmd.m_drawTarget != DrawTarget::UI)
-            {
-                return;
-            }
-            extraAppendUIDrawCommand(cmd);
-        }
-
-        void GLContext::appendUIDrawData(const std::vector<float>& positions,
-            const std::vector<float>& colorOrUVs,
-            const std::vector<uint32_t>& indices, DrawCommand cmd)
-        { 
-            assert(cmd.m_onlyId);
-            assert(cmd.m_materialType == MaterialType::ColorMaterial || 
+            assert(cmd.m_drawTarget == DrawTarget::UI);
+            assert(cmd.m_materialType == MaterialType::ColorMaterial ||
                 cmd.m_materialType == MaterialType::TextureMaterial);
             RenderItem* ri = nullptr;
             bool oldOpcacity = false;
@@ -410,9 +468,11 @@ namespace sz_gui
                 ri = new RenderItem();
                 bool useColor = (cmd.m_materialType == MaterialType::ColorMaterial);
                 ri->m_geo = std::make_unique<Geometry>(
-                    positions.size() * sizeof(float),
-                    colorOrUVs.size() * sizeof(float),
-                    indices.size() * sizeof(uint32_t), useColor);
+                    positions.size(),
+                    colorOrUVs.size(),
+                    indices.size(), 
+                    useColor
+                );
             }
             else if (oIt == m_opacityUIUnmap.end())
             {
@@ -439,8 +499,9 @@ namespace sz_gui
 
             ri->m_position = cmd.m_worldPos;
             ri->m_drawMode = getDrawMode(cmd.m_drawMode);
-            uploadToGPU(ri, positions, colorOrUVs, indices, cmd);
-            
+            ri->m_materialType = cmd.m_materialType;
+            uploadToGPU(ri, positions, colorOrUVs, indices, nullptr, cmd);
+
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableFaceCulling))
             {
                 ri->m_cullFace = true;
@@ -449,6 +510,10 @@ namespace sz_gui
                 ri->m_cullFace = (cmd.m_faceCulling.m_cullFace ==
                     CullFaceType::Back ? GL_BACK : GL_FRONT);
             }
+            else
+            {
+                ri->m_cullFace = false;
+            }
 
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableDepthTest))
             {
@@ -456,6 +521,11 @@ namespace sz_gui
                 ri->m_depthFunc = getDepthFunc(cmd.m_depthTest.m_depthFunc);
                 ri->m_depthWrite = cmd.m_depthTest.m_depthWrite;
             }
+            else
+			{
+				ri->m_depthTest = false;
+                ri->m_depthWrite = false;
+			}
 
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend))
             {
@@ -464,6 +534,10 @@ namespace sz_gui
                 ri->m_dFactor = getBlendDFactor(cmd.m_blend.m_dstBlendFunc);
                 ri->m_opacity = cmd.m_blend.m_opacity;
             }
+            else
+			{
+				ri->m_blend = false;
+			}
 
             if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorSet))
             {
@@ -471,8 +545,12 @@ namespace sz_gui
                 ri->m_scissorTest = cmd.m_scissorTest.m_scissorTest;
                 ri->m_scissorX = cmd.m_scissorTest.m_x;
                 ri->m_scissorY = cmd.m_scissorTest.m_y;
-				ri->m_scissorW = cmd.m_scissorTest.m_width;
-				ri->m_scissorH = cmd.m_scissorTest.m_height;
+                ri->m_scissorW = cmd.m_scissorTest.m_width;
+                ri->m_scissorH = cmd.m_scissorTest.m_height;
+            }
+            else
+            {
+                ri->m_scissorSet = false;
             }
 
             if (oldOpcacity || oldTransparent)
@@ -488,13 +566,136 @@ namespace sz_gui
             }
 
             m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
-			m_opacityUIUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
+            m_opacityUIUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
         }
-        
-        void GLContext::extraAppendUIDrawCommand(DrawCommand cmd)
+
+        void GLContext::AppendTextDrawData(const std::vector<float>& positions,
+            const std::vector<float>& uvs, const std::vector<uint32_t>& indices, 
+            const std::vector<float>& layers, DrawCommand cmd)
         {
             assert(cmd.m_onlyId);
+            assert(cmd.m_drawTarget == DrawTarget::Text);
+            assert(cmd.m_materialType == MaterialType::TextMaterial);
 
+            RenderItem* ri = nullptr;
+            bool oldOpcacity = false;
+            bool oldTransparent = false;
+
+            auto oIt = m_opacityTextUnmap.find(cmd.m_onlyId);
+            auto tIt = m_transparentTextUnmap.find(cmd.m_onlyId);
+            if (oIt == m_opacityTextUnmap.end() && tIt == m_transparentTextUnmap.end())
+            {
+                ri = new RenderItem();
+                ri->m_geo = std::make_unique<Geometry>(
+                    positions.size(),
+                    uvs.size(), 
+                    layers.size(),
+                    indices.size()
+                );
+            }
+            else if (oIt == m_opacityTextUnmap.end())
+            {
+                oldTransparent = true;
+                ri = tIt->second->get();
+            }
+            else
+            {
+                oldOpcacity = true;
+                ri = oIt->second->get();
+            }
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend) && oldOpcacity)
+            {
+                auto oldRenderItem = std::move(*(oIt->second));
+                m_opacityItems.erase(oIt->second);
+                m_opacityTextUnmap.erase(oIt);
+
+                auto it = m_transparentItems.insert(m_transparentItems.end(), std::move(oldRenderItem));
+                m_transparentTextUnmap[cmd.m_onlyId] = it;
+                oldOpcacity = false;
+                oldTransparent = true;
+            }
+
+            ri->m_position = cmd.m_worldPos;
+            ri->m_drawMode = getDrawMode(cmd.m_drawMode);
+            ri->m_materialType = cmd.m_materialType;
+            uploadToGPU(ri, positions, uvs, indices, &layers, cmd);
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableFaceCulling))
+            {
+                ri->m_cullFace = true;
+                ri->m_frontFace = (cmd.m_faceCulling.m_frontFace ==
+                    FrontFaceType::CCW ? GL_CCW : GL_CW);
+                ri->m_cullFace = (cmd.m_faceCulling.m_cullFace ==
+                    CullFaceType::Back ? GL_BACK : GL_FRONT);
+            }
+            else
+            {
+                ri->m_faceCulling = false;
+            }
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableDepthTest))
+            {
+                ri->m_depthTest = true;
+                ri->m_depthFunc = getDepthFunc(cmd.m_depthTest.m_depthFunc);
+                ri->m_depthWrite = cmd.m_depthTest.m_depthWrite;
+            }
+            else
+			{
+				ri->m_depthTest = false;
+                ri->m_depthWrite = false;
+			}
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend))
+            {
+                ri->m_blend = true;
+                ri->m_sFactor = getBlendSFactor(cmd.m_blend.m_srcBlendFunc);
+                ri->m_dFactor = getBlendDFactor(cmd.m_blend.m_dstBlendFunc);
+                ri->m_opacity = cmd.m_blend.m_opacity;
+            }
+            else
+			{
+				ri->m_blend = false;
+			}
+
+            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorSet))
+            {
+                ri->m_scissorSet = true;
+                ri->m_scissorTest = cmd.m_scissorTest.m_scissorTest;
+                ri->m_scissorX = cmd.m_scissorTest.m_x;
+                ri->m_scissorY = cmd.m_scissorTest.m_y;
+                ri->m_scissorW = cmd.m_scissorTest.m_width;
+                ri->m_scissorH = cmd.m_scissorTest.m_height;
+            }
+            else
+			{
+				ri->m_scissorSet = false;
+			}
+
+            if (oldOpcacity || oldTransparent)
+            {
+                return;
+            }
+
+            if (ri->m_blend)
+            {
+                m_transparentItems.push_back(std::unique_ptr<RenderItem>(ri));
+                m_transparentTextUnmap[cmd.m_onlyId] = std::prev(m_transparentItems.end());
+                return;
+            }
+
+            m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
+            m_opacityTextUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
+        }
+
+        void GLContext::ExtraAppendDrawCommand(DrawCommand cmd)
+        {
+            assert(cmd.m_onlyId);
+            if (cmd.m_drawTarget != DrawTarget::UI)
+            {
+                return;
+            }
+ 
             RenderItem* ri = nullptr;
             bool oldOpcacity = false;
             bool oldTransparent = false;
@@ -530,112 +731,16 @@ namespace sz_gui
             }
         }
 
-        void GLContext::appendTextDrawData(const std::vector<float>& positions,
-            const std::vector<float>& uvs, const std::vector<uint32_t>& indices,
-            DrawCommand cmd)
-        {
-            assert(cmd.m_onlyId);
-            assert(cmd.m_materialType == MaterialType::TextMaterial);
-
-            RenderItem* ri = nullptr;
-            bool oldOpcacity = false;
-            bool oldTransparent = false;
-
-            auto oIt = m_opacityTextUnmap.find(cmd.m_onlyId);
-            auto tIt = m_transparentTextUnmap.find(cmd.m_onlyId);
-            if (oIt == m_opacityTextUnmap.end() && tIt == m_transparentTextUnmap.end())
-            {
-                ri = new RenderItem();
-                ri->m_geo = std::make_unique<Geometry>(
-                    positions.size() * sizeof(float),
-                    uvs.size() * sizeof(float),
-                    indices.size() * sizeof(uint32_t), false);
-            }
-            else if (oIt == m_opacityTextUnmap.end())
-            {
-                oldTransparent = true;
-                ri = tIt->second->get();
-            }
-            else
-            {
-                oldOpcacity = true;
-                ri = oIt->second->get();
-            }
-
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend) && oldOpcacity)
-            {
-                auto oldRenderItem = std::move(*(oIt->second));
-                m_opacityItems.erase(oIt->second);
-                m_opacityTextUnmap.erase(oIt);
-
-                auto it = m_transparentItems.insert(m_transparentItems.end(), std::move(oldRenderItem));
-                m_transparentTextUnmap[cmd.m_onlyId] = it;
-                oldOpcacity = false;
-                oldTransparent = true;
-            }
-
-            ri->m_position = cmd.m_worldPos;
-            ri->m_drawMode = getDrawMode(cmd.m_drawMode);
-            uploadToGPU(ri, positions, uvs, indices, cmd);
-
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableFaceCulling))
-            {
-                ri->m_cullFace = true;
-                ri->m_frontFace = (cmd.m_faceCulling.m_frontFace ==
-                    FrontFaceType::CCW ? GL_CCW : GL_CW);
-                ri->m_cullFace = (cmd.m_faceCulling.m_cullFace ==
-                    CullFaceType::Back ? GL_BACK : GL_FRONT);
-            }
-
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableDepthTest))
-            {
-                ri->m_depthTest = true;
-                ri->m_depthFunc = getDepthFunc(cmd.m_depthTest.m_depthFunc);
-                ri->m_depthWrite = cmd.m_depthTest.m_depthWrite;
-            }
-
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableBlend))
-            {
-                ri->m_blend = true;
-                ri->m_sFactor = getBlendSFactor(cmd.m_blend.m_srcBlendFunc);
-                ri->m_dFactor = getBlendDFactor(cmd.m_blend.m_dstBlendFunc);
-                ri->m_opacity = cmd.m_blend.m_opacity;
-            }
-
-            if (sz_utils::HasFlag(cmd.m_renderState, RenderState::EnableScissorSet))
-            {
-                ri->m_scissorSet = true;
-                ri->m_scissorTest = cmd.m_scissorTest.m_scissorTest;
-                ri->m_scissorX = cmd.m_scissorTest.m_x;
-                ri->m_scissorY = cmd.m_scissorTest.m_y;
-                ri->m_scissorW = cmd.m_scissorTest.m_width;
-                ri->m_scissorH = cmd.m_scissorTest.m_height;
-            }
-
-            if (oldOpcacity || oldTransparent)
-            {
-                return;
-            }
-
-            if (ri->m_blend)
-            {
-                m_transparentItems.push_back(std::unique_ptr<RenderItem>(ri));
-                m_transparentTextUnmap[cmd.m_onlyId] = std::prev(m_transparentItems.end());
-                return;
-            }
-
-            m_opacityItems.push_back(std::unique_ptr<RenderItem>(ri));
-            m_opacityTextUnmap[cmd.m_onlyId] = std::prev(m_opacityItems.end());
-        }
-
         void GLContext::uploadToGPU(RenderItem* ri, const std::vector<float>& positions,
             const std::vector<float>& colorOrUVs, const std::vector<uint32_t>& indices,
-            DrawCommand cmd)
+            const std::vector<float>* const layers, DrawCommand cmd)
         {
+            DISABLE_MSVC_WARNING(26813);
             if (cmd.m_uploadOp == UploadOperation::Retain)
             {
                 return;
             }
+            RESTORE_MSVC_WARNING();
 
             if (cmd.m_materialType == MaterialType::ColorMaterial)
             {
@@ -658,6 +763,7 @@ namespace sz_gui
 				{
 					ri->m_geo->UploadIndices(indices);
 				}
+                return;
             }
 
             if (cmd.m_materialType == MaterialType::TextureMaterial)
@@ -667,7 +773,13 @@ namespace sz_gui
 
             if (cmd.m_materialType == MaterialType::TextMaterial)
             {
-                assert(0);
+                assert(layers != nullptr);
+
+                if (!sz_utils::HasFlag(cmd.m_uploadOp, UploadOperation::UploadText))
+                {
+                    return;
+                }
+                ri->m_geo->UploadAll(positions, colorOrUVs, *layers, indices);
             }
         }
 
@@ -760,10 +872,10 @@ namespace sz_gui
             setBlendState(ri);
             
             // 决定使用哪个Shader 
-            auto& shader = pickShader(ri->m_type);
+            auto& shader = pickShader(ri->m_materialType);
             shader->Begin();
 
-            switch (ri->m_type)
+            switch (ri->m_materialType)
             {
             case MaterialType::ColorMaterial:
                 // mvp
@@ -772,19 +884,20 @@ namespace sz_gui
                 shader->SetUniformMatrix4x4("projectionMatrix", m_camera->GetProjectionMatrix());
 				break;
 			case MaterialType::TextureMaterial:
+                assert(0);
 				break;
 			case MaterialType::TextMaterial:
                 // mvp
                 shader->SetUniformMatrix4x4("modelMatrix", ri->GetModelMatrix());
                 shader->SetUniformMatrix4x4("viewMatrix", m_camera->GetViewMatrix());
                 shader->SetUniformMatrix4x4("projectionMatrix", m_camera->GetProjectionMatrix());
-                // 字体纹理
-                // shader->SetUniformInt("sampler", m_fontTexture->GetUnit());
-                // m_fontTexture->Bind();
+                // 字体纹理数组
+                shader->SetUniformInt("sampler", (int)m_fontTextureArray->GetUnit());
+                m_fontTextureArray->Bind();
                 // 透明度
                 shader->SetUniformFloat("opacity", ri->m_opacity);
                 // 文字颜色
-
+                shader->SetUniformVector3("textColor", ri->m_textInfo.m_color);
 				break;
 			default:
                 assert(0);
@@ -922,15 +1035,15 @@ namespace sz_gui
 			}
         }
 
-        std::tuple<stbtt_packedchar*, Texture*>
+        std::tuple<int32_t, stbtt_packedchar*>
             GLContext::getPackedCharData(int32_t codepoint)
         {
             const auto& it = m_packedCharUnmap.find(codepoint);
             if (it != m_packedCharUnmap.end())
             {
-                return { &it->second.second, m_fontTextureMap[it->second.first].get()};
+                return { it->second.first, &it->second.second};
             }
-            return { nullptr, nullptr };
+            return { -1, nullptr};
         }
     }
 }

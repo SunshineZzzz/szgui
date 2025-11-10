@@ -92,6 +92,7 @@ namespace sz_gui
 		void OnWindowResize() override 
 		{ 
 			setUploadOp(UploadOperation::UploadPos);
+			setUploadOp(UploadOperation::UploadText);
 			return; 
 		};
 		// 鼠标移动进入事件
@@ -120,7 +121,7 @@ namespace sz_gui
 		// 是否可见
 		virtual bool IsVisible() const override
 		{
-			return  HasUIFlag(UIFlag::Visibale);
+			return HasUIFlag(UIFlag::Visibale);
 		}
 		// 是否可交互
 		virtual bool IsInteractive() const override

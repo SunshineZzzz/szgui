@@ -33,7 +33,7 @@ namespace sz_gui
 			// 几何
 			std::unique_ptr<Geometry> m_geo = nullptr;
 			// 材质类型
-			MaterialType m_type;
+			MaterialType m_materialType = MaterialType::ColorMaterial;
 			// 深度检测相关
 			bool m_depthTest{ true };
 			GLenum m_depthFunc{ GL_LEQUAL };

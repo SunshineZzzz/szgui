@@ -55,7 +55,7 @@ namespace sz_gui
 			}
 		}
 
-		std::tuple<const std::string, bool> Texture::Load(const std::string& path)
+		std::tuple<std::string, bool> Texture::Load(const std::string& path)
 		{
 			std::string errMsg = "success";
 

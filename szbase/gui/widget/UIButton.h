@@ -66,8 +66,15 @@ namespace sz_gui
         protected:
             // 按钮颜色
             std::map<ButtonState, std::vector<float>> m_colors;
+            // 按钮文字相关属性
+            std::vector<float> m_textPositions;
+            std::vector<float> m_textUvs;
+            std::vector<uint32_t> m_textIndices;
+            std::vector<float> m_textLayers;
             // 按钮文本
-            std::string m_text = "按钮";
+            std::string m_text = "button";
+            // 文本对齐方式
+            TextAlignment m_ta = TextAlignment::HCenter | TextAlignment::VCenter;
             // 当前按钮状态 
             ButtonState m_state = ButtonState::Normal;
             // 鼠标左键是否按下

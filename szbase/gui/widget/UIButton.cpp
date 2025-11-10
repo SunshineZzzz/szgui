@@ -19,6 +19,7 @@ namespace sz_gui
 
 			SetColorTheme(ColorTheme::LightMode);
             SetUIFlag(UIFlag::Interactive);
+            setUploadOp(UploadOperation::UploadText);
 		}
 
         bool UIButton::OnMouseLeftButtonClick()
@@ -196,24 +197,22 @@ namespace sz_gui
                 return;
             }
             
-            auto codepoints = sz_string::UTF8Decode(m_text);
-            if (codepoints.empty())
+            auto [ok, codepoints] = sz_string::UTF8Decode(m_text);
+            if (!ok || codepoints.empty())
 			{
 				return;
 			}
 
-            auto limitWidth = m_width - 2 * 2.0f;
-            auto limitHeight = m_height - 2 * 2.0f;
-
-            static std::vector<float> positions;
-            static std::vector<float> uvs;
-            static std::vector<uint32_t> indices;
-
+            auto limitWidth = m_width;
+            auto limitHeight = m_height;
             auto& render = m_uiManager.lock()->GetRender();
-            if (!render->DrawTextToBuffer(limitWidth, limitHeight, codepoints, 
-                positions, uvs, indices))
+            if (sz_utils::HasFlag(uploadOp, UploadOperation::UploadText))
             {
-                return;
+                if (!render->DrawTextToBuffer(m_ta, limitWidth, limitHeight, codepoints,
+                    m_textPositions, m_textUvs, m_textIndices, m_textLayers))
+                {
+                    return;
+                }
             }
 
             // 绘制命令
@@ -226,6 +225,7 @@ namespace sz_gui
             dCmd.m_renderState = dCmd.m_renderState | RenderState::EnableBlend;
             dCmd.m_materialType = MaterialType::TextMaterial;
 
+            render->AppendTextDrawData(m_textPositions, m_textUvs, m_textIndices, m_textLayers, dCmd);
         }
 	}
 }

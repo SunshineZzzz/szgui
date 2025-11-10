@@ -59,7 +59,6 @@ void main()
 )";
 #endif
 
-
 // 文字顶点着色器
 const char* TextVS =
 #ifdef USE_OPENGL_ES
@@ -67,7 +66,9 @@ R"(#version 300 es
 precision highp float;
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
+layout (location = 2) in float aLayer;
 out vec2 uv;
+out float layer;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
@@ -76,13 +77,16 @@ void main()
 	vec4 transformPosition = vec4(aPos, 1.0);
 	gl_Position = projectionMatrix * viewMatrix * modelMatrix * transformPosition;
 	uv = aUV;
+	layer = aLayer;
 }
 )";
 #else
 R"(#version 460 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aUV;
+layout (location = 2) in float aLayer;
 out vec2 uv;
+out float layer;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
@@ -91,6 +95,7 @@ void main()
 	vec4 transformPosition = vec4(aPos, 1.0);
 	gl_Position = projectionMatrix * viewMatrix * modelMatrix * transformPosition;
 	uv = aUV;
+	layer = aLayer;
 }
 )";
 #endif
@@ -99,28 +104,43 @@ const char* TextFS =
 #ifdef USE_OPENGL_ES
 R"(#version 300 es
 precision highp float;
+precision highp sampler2DArray;
 in vec2 uv;
+in float layer;
 out vec4 FragColor;
-uniform sampler2D sampler;
+uniform sampler2DArray sampler;
 uniform vec3 textColor;
 uniform float opacity;
 void main()
 {
-	vec4 sampled = vec4(1.0, 1.0, 1.0, texture(sampler, uv).r);
-	FragColor = vec4(textColor, 1.0) * sampled * opacity;
+	float mask = texture(sampler, vec3(uv, layer)).r;
+	if (mask < 0.1) 
+	{
+		// 丢弃纯色背景
+		discard;
+	}
+	vec3 finalRGB = textColor * opacity * mask;
+	FragColor = vec4(finalRGB, opacity * mask);
 }
 )";
 #else
 R"(#version 460 core
 in vec2 uv;
+in float layer;
 out vec4 FragColor;
-uniform sampler2D sampler;
+uniform sampler2DArray sampler;
 uniform vec3 textColor;
 uniform float opacity;
 void main()
 {
-	vec4 sampled = vec4(1.0, 1.0, 1.0, texture(sampler, uv).r);
-	FragColor = vec4(textColor, 1.0) * sampled * opacity;
+	float mask = texture(sampler, vec3(uv, layer)).r;
+	if (mask < 0.1) 
+	{
+		// 丢弃纯色背景
+		discard;
+	}
+	vec3 finalRGB = textColor * opacity * mask;
+	FragColor = vec4(finalRGB, opacity * mask);
 }
 )";
 #endif

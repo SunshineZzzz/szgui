@@ -23,10 +23,10 @@ namespace sz_gui
 			~Shader();
 
 			// 从文件加载着色器
-			std::tuple<const std::string, bool> LoadFromFile(const char* vertexShaderPath, 
+			std::tuple<std::string, bool> LoadFromFile(const char* vertexShaderPath, 
 				const char* fragmentShaderPath);
 			// 从字符串加载着色器
-			std::tuple<const std::string, bool> LoadFromString(const char* vertexShaderSource,
+			std::tuple<std::string, bool> LoadFromString(const char* vertexShaderSource,
 				const char* fragmentShaderSource);
 
 			// 开始使用当前Shader
@@ -37,6 +37,7 @@ namespace sz_gui
 			void SetUniformFloat(const std::string& name, float value) const;
 			void SetUniformVector3(const std::string& name, float x, float y, float z) const;
 			void SetUniformVector3(const std::string& name, const float* values) const;
+			void SetUniformVector3(const std::string& name, const glm::vec3 value) const;
 			void SetUniformInt(const std::string& name, int value) const;
 			void SetUniformMatrix4x4(const std::string& name, glm::mat4 value) const;
 			void SetUniformBool(const std::string& name, bool bValue) const;
