@@ -72,18 +72,37 @@ namespace sz_ds
         template<typename EventType>
         uint64_t Subscribe(EventHandler handler) 
         {
-            // 生成唯一的订阅 ID
+            // 生成唯一的订阅ID
             uint64_t subscriptionId = next_subscription_id++;
             if (subscriptionId == 0) [[unlikely]]
 			{
                 assert(0);
 			}
 
-            // 将处理器插入到对应事件类型的 handlerMap 中
+            // 将处理器插入到对应事件类型的handlerMap中
             auto& handlerMap = m_eventMap[std::type_index(typeid(typename EventType::Type))];
 
             // 插入处理器
             handlerMap.insert({ subscriptionId, std::move(handler) });
+
+            return subscriptionId;
+        }
+
+        template<typename EventType, typename HandlerFunc>
+        uint64_t Subscribe(HandlerFunc handler)
+        {
+            // 生成唯一的订阅ID
+            uint64_t subscriptionId = next_subscription_id++;
+            if (subscriptionId == 0) [[unlikely]]
+            {
+                assert(0);
+            }
+
+            EventHandler eventDelegate;
+            eventDelegate.Bind(std::move(handler));
+
+            auto& handlerMap = m_eventMap[std::type_index(typeid(typename EventType::Type))];
+            handlerMap.insert({ subscriptionId, std::move(eventDelegate) });
 
             return subscriptionId;
         }
@@ -100,10 +119,10 @@ namespace sz_ds
                 handlerMap.erase(subscriptionId);
 
                 // 如果没有订阅者了，移除该事件类型
-                if (handlerMap.empty()) 
-                {
-                    m_eventMap.erase(it);
-                }
+                // if (handlerMap.empty()) 
+                // {
+                //     m_eventMap.erase(it);
+                // }
             }
         }
 

@@ -5,7 +5,9 @@
 // TEST
 #include "test/TestFramework.h"
 #include "ds/Delegate.h"
+#include "ds/EventBus.h"
 
+#include "gui/EventTypes.h"
 #include "gui/widget/UIFrame.h"
 #include "gui/widget/UIButton.h"
 #include "gui/layout/AnchorLayout.h"
@@ -151,6 +153,13 @@ namespace Test_Delegate
         d_move_ctor_void_int(5); 
         TEST_ASSERT(t1.value == 15, "Move constructor invocation");
 
+        d_void_int.Bind([](int x) {
+            log(LogLevel::INFO, "  [Invoked] Lambda function (Lambda void (*)(int))");
+            sValue += x;
+        });
+        d_void_int(10);
+        TEST_ASSERT(sValue == 20, "Lambda function invocation");
+
         print_subsection("All tests complete");
         return 0;
 	}
@@ -158,9 +167,70 @@ namespace Test_Delegate
     #pragma warning( pop )
 }
 
+namespace Test_EventBus
+{
+    #pragma warning( push )
+    #pragma warning( disable : 26800 )
+
+    using namespace sz_test;
+    using namespace sz_ds;
+
+    struct TextEventData 
+    {
+        const int val{ 0 };
+    };
+    using TestEvent = sz_ds::Event<TextEventData*>;
+
+    class SubscriberA 
+    {
+    public:
+        int val{ 0 };
+
+        void OnTestEvent(const sz_ds::IEvent& event) 
+        {
+            const auto& testEvent = static_cast<const TestEvent&>(event);
+            val = testEvent.GetData()->val;
+        }
+    };
+
+    // 测试事件总线
+    int Test_EventBus(int argc, char* argv[])
+    {
+        print_section("Test_EventBus");
+
+        EventBus bus;
+        
+        TextEventData data{ 1 };
+
+        auto subA = std::make_unique<SubscriberA>();
+
+        Delegate<void, const IEvent&> delegateA;
+        delegateA.Bind(subA.get(), &SubscriberA::OnTestEvent);
+
+        auto id = bus.Subscribe<TestEvent>(delegateA);
+
+        bus.Publish<TestEvent>(&data);
+
+        bus.Unsubscribe<TestEvent>(id);
+
+        id = bus.Subscribe<TestEvent>(
+            [subA_ptr = subA.get()](const sz_ds::IEvent& event)
+            {
+                subA_ptr->OnTestEvent(event);
+            }
+        );
+
+        print_subsection("All tests complete");
+        return 0;
+    }
+
+    #pragma warning( pop )
+}
+
 int main(int argc, char* argv[])
 {
     // Test_Delegate::Test_Delegate(argc, argv);
+    // Test_EventBus::Test_EventBus(argc, argv);
 
     sz_gui::SDLApp::InitSDL();
 
@@ -185,6 +255,11 @@ int main(int argc, char* argv[])
         80, 40);
     btn1->SetParent(frame);
     frame->AddWidget(btn1);
+
+    btn1->SubscribeMouseLeftButtonClick([](const sz_ds::IEvent& event) {
+        const auto& mouseEvent = static_cast<const sz_gui::events::MouseButtonEvent&>(event);
+        std::cout << "Mouse Left Button Clicked, id:" << mouseEvent.GetData()->m_widgetOnlyId << std::endl;
+    });
 
     auto btn2 = std::make_shared<sz_gui::widget::UIButton>("TopRight",
         sz_gui::layout::AnchorPoint::TopRight,

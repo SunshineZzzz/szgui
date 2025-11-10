@@ -26,6 +26,9 @@ namespace sz_gui
         {
             m_mouseLeftIsDown = false;
             setState(ButtonState::Normal);
+
+            events::MouseClickEventData data{ events::MouseButtonType::BUTTON_LEFT, m_childIdForUIManager };
+            m_eventbus.Publish<events::MouseButtonEvent>(&data);
             return false;
         }
 

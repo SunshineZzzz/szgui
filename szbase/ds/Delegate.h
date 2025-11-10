@@ -1,4 +1,4 @@
-// comment: 代理，不会主动在堆上分配内存，性能敏感，可以使用
+// comment: 委托，不会主动在堆上分配内存，性能敏感，可以使用
 
 #pragma once
 
@@ -11,7 +11,7 @@ namespace sz_ds
     static constexpr size_t MAX_DELEGATE_SIZE = 48;
     static constexpr size_t MAX_ALIGN = alignof(std::max_align_t);
 
-    // 代理接口
+    // 委托接口
     template<typename R, typename... Args>
     class IDelegate
     {
@@ -23,6 +23,7 @@ namespace sz_ds
         virtual bool is_bound() const noexcept = 0;
     };
 
+    // 空委托
     template<typename R, typename... Args>
     class EmptyDelegate final : public  IDelegate<R, Args...>
     {
@@ -48,7 +49,7 @@ namespace sz_ds
         bool is_bound() const noexcept override { return false; }
     };
 
-    // 成员函数代理实现
+    // 成员函数委托实现
     template<typename T, typename R, typename... Args>
     class DelegateImp : public IDelegate<R, Args...>
     {
@@ -82,7 +83,7 @@ namespace sz_ds
         Method m_method;
     };
 
-    // 静态/全局函数代理实现
+    // 静态/全局函数委托实现
     template<typename R, typename... Args>
     class DelegateImpStatic : public IDelegate<R, Args...>
     {
@@ -115,7 +116,39 @@ namespace sz_ds
         Method m_method;
     };
 
-    // 主委托
+    // Lambda/std::function/Functor委托
+    template<typename F, typename R, typename... Args>
+    class DelegateImpFunctor final : public IDelegate<R, Args...>
+    {
+    public:
+        template<typename FunctorType>
+        explicit DelegateImpFunctor(FunctorType&& functor)
+            : m_functor(std::forward<FunctorType>(functor))
+        {
+        }
+
+        void move_construct(void* buf) noexcept override
+        {
+            new(buf) DelegateImpFunctor(std::move(m_functor));
+        }
+
+        void copy_construct(void* buf) const override
+        {
+            new(buf) DelegateImpFunctor(m_functor);
+        }
+
+        R invoke(Args... args) override
+        {
+            return m_functor(std::forward<Args>(args)...);
+        }
+
+        bool is_bound() const noexcept override { return true; }
+
+    private:
+        F m_functor;
+    };
+
+    // 委托
     template<typename R, typename... Args>
     class Delegate
     {
@@ -124,13 +157,11 @@ namespace sz_ds
 
         void empty()
         {
-            ::new(static_cast<void*>(m_realObject)) EmptyDelegate<R, Args...>;
+            new(static_cast<void*>(m_realObject)) EmptyDelegate<R, Args...>;
             m_delegate = static_cast<IDelegateBase*>(static_cast<void*>(m_realObject));
         }
 
     public:
-        
-
         Delegate() noexcept
         {
             empty();
@@ -154,7 +185,7 @@ namespace sz_ds
             }
             else 
             {
-                ::new(static_cast<void*>(m_realObject)) EmptyDelegate<R, Args...>;
+                new(static_cast<void*>(m_realObject)) EmptyDelegate<R, Args...>;
             }
             m_delegate = static_cast<IDelegateBase*>(static_cast<void*>(m_realObject));
         }
@@ -244,7 +275,7 @@ namespace sz_ds
 
             if (object && method)
             {
-                ::new(m_realObject) DelegateImp<T, R, Args...>(object, method);
+                new(m_realObject) DelegateImp<T, R, Args...>(object, method);
                 m_delegate = static_cast<IDelegateBase*>(static_cast<void*>(m_realObject));
             }
             else
@@ -269,11 +300,46 @@ namespace sz_ds
 
             if (method)
             {
-                ::new(m_realObject) DelegateImpStatic<R, Args...>(method);
+                new(m_realObject) DelegateImpStatic<R, Args...>(method);
                 m_delegate = static_cast<IDelegateBase*>(static_cast<void*>(m_realObject));
             }
             else
             {
+                empty();
+            }
+        }
+
+        // 绑定任意可调用对象(Functor, std::function, 捕获/非捕获Lambda)
+        template<typename F>
+        void Bind(F&& functor)
+        {
+            // 获取Functor的真实类型（去除引用和cv限定符）
+            using FunctorType = std::decay_t<F>;
+            using ImpType = DelegateImpFunctor<FunctorType, R, Args...>;
+
+            // 编译时检查大小和对齐
+            static_assert(sizeof(ImpType) <= MAX_DELEGATE_SIZE,
+                "DelegateImpFunctor is too large for the internal buffer.");
+            static_assert(alignof(ImpType) <= MAX_ALIGN,
+                "DelegateImpFunctor alignment is too large for the internal buffer.");
+
+            // 销毁当前绑定的对象
+            if (m_delegate)
+            {
+                m_delegate->~IDelegate();
+                m_delegate = nullptr;
+            }
+
+            // 检查FunctorType是否可调用且参数匹配
+            if constexpr (std::is_invocable_v<FunctorType, Args...>)
+            {
+                // 在内部缓冲区上构造新的DelegateImpFunctor实例
+                new(m_realObject) ImpType(std::forward<F>(functor));
+                m_delegate = static_cast<IDelegateBase*>(static_cast<void*>(m_realObject));
+            }
+            else
+            {
+                // 如果不可调用，设置为空委托
                 empty();
             }
         }

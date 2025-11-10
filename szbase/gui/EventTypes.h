@@ -9,31 +9,23 @@ namespace sz_gui
 	namespace events
 	{
         // 前置声明
-        struct MouseButtonEventData;
-        using MouseButtonEvent = sz_ds::Event<events::MouseButtonEventData>;
+        struct MouseClickEventData;
+        using MouseButtonEvent = sz_ds::Event<events::MouseClickEventData*>;
+
+        // 鼠标按键类型
+        enum class MouseButtonType
+        {
+            // 左键
+            BUTTON_LEFT,
+        };
 
         // 鼠标点击事件数据
-        struct MouseButtonEventData 
+        struct MouseClickEventData
         {
-            enum class Type
-            {
-                BUTTON_LEFT,
-                BUTTON_RIGHT,
-	            BUTTON_MIDDLE,
-            };
-
-            enum class State
-            {
-                UP,
-				DOWN,
-			};
-
             // 鼠标按键类型
-            Type m_type;
-            // 鼠标按键状态
-            State m_state;
-            // 相对于窗口x，y坐标
-            float m_x{ 0.0f }, m_y{ 0.0f };
+            const MouseButtonType m_type{ MouseButtonType::BUTTON_LEFT };
+            // 控件唯一Id
+            const uint64_t m_widgetOnlyId{ 0 };
         };
 	}
 }

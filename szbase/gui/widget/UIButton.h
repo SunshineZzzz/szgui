@@ -40,6 +40,14 @@ namespace sz_gui
                 uint32_t desiredW, uint32_t desiredH);
 
         public:
+            // 订阅鼠标左键点击事件
+            template<typename HandlerFunc>
+            uint64_t SubscribeMouseLeftButtonClick(HandlerFunc handler)
+            {
+                return m_eventbus.Subscribe<events::MouseButtonEvent>(handler);
+            }
+
+        public:
             // 鼠标左键点击事件，返回false将会阻止冒泡
             bool OnMouseLeftButtonClick() override;
             // 鼠标左键按下事件
